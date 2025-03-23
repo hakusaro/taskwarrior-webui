@@ -44,7 +44,7 @@
 					small
 				>
 					<v-icon x-small left>mdi-filter</v-icon>
-					{{ activeContextLabel }}
+					Filtered: {{ activeContextLabel }}
 				</v-chip>
 			</div>
 			<v-select
