@@ -29,12 +29,12 @@
 				Taskwarrior WebUI
 			</v-toolbar-title>
 
-			<!-- Task Status Tabs -->
+			<!-- Task Status Tabs - Desktop Only -->
 			<v-chip-group
 				v-model="selectedStatusIndex"
 				mandatory
 				active-class="primary--text"
-				class="task-filters mr-4"
+				class="task-filters mr-4 d-none d-sm-flex"
 				@change="changeStatus"
 			>
 				<v-chip
@@ -50,67 +50,156 @@
 				</v-chip>
 			</v-chip-group>
 
-			<!-- Context Selection -->
-			<v-menu offset-y>
+			<v-spacer />
+			
+			<!-- Desktop Context & Mode Controls (right-aligned) -->
+			<div class="d-none d-sm-flex align-center">
+				<!-- Context Selection -->
+				<v-menu offset-y>
+					<template v-slot:activator="{ on, attrs }">
+						<v-btn
+							class="mr-2"
+							outlined
+							small
+							v-bind="attrs"
+							v-on="on"
+						>
+							<v-icon left small>mdi-filter-variant</v-icon>
+							{{ contextText }}
+						</v-btn>
+					</template>
+					<v-list dense>
+						<v-list-item
+							v-for="ctx in availableContexts"
+							:key="ctx.value"
+							@click="setContextAndSave(ctx.value)"
+						>
+							<v-list-item-title>
+								{{ ctx.text }}
+								<v-icon v-if="ctx.value === selectedContext" small color="primary" class="ml-2">
+									mdi-check
+								</v-icon>
+							</v-list-item-title>
+						</v-list-item>
+					</v-list>
+				</v-menu>
+
+				<!-- Mode Selection -->
+				<v-menu offset-y>
+					<template v-slot:activator="{ on, attrs }">
+						<v-btn
+							class="mr-2"
+							outlined
+							small
+							v-bind="attrs"
+							v-on="on"
+						>
+							<v-icon left small>mdi-view-module</v-icon>
+							{{ displayMode }}
+						</v-btn>
+					</template>
+					<v-list dense>
+						<v-list-item
+							v-for="m in allModes"
+							:key="m"
+							@click="setDisplayMode(m)"
+						>
+							<v-list-item-title>
+								{{ m }}
+								<v-icon v-if="m === displayMode" small color="primary" class="ml-2">
+									mdi-check
+								</v-icon>
+							</v-list-item-title>
+						</v-list-item>
+					</v-list>
+				</v-menu>
+			</div>
+			
+			<!-- Mobile Status Indicator - Only visible on xs screens -->
+			<div class="d-sm-none mr-2 ml-auto">
+				<v-chip small outlined color="primary">
+					<v-icon left x-small>{{ statusIcons[currentStatus] }}</v-icon>
+					{{ currentStatus }}
+				</v-chip>
+			</div>
+
+			<!-- Mobile View Menu - Only visible on xs screens -->
+			<v-menu offset-y class="d-sm-none">
 				<template v-slot:activator="{ on, attrs }">
 					<v-btn
-						class="mr-2"
-						outlined
-						small
+						icon
 						v-bind="attrs"
 						v-on="on"
 					>
-						<v-icon left small>mdi-filter-variant</v-icon>
-						{{ contextText }}
+						<v-icon>mdi-menu</v-icon>
 					</v-btn>
 				</template>
-				<v-list dense>
+				<v-list>
+					<v-subheader>Task Status</v-subheader>
+					<v-list-item
+						v-for="st in allStatus"
+						:key="'status-' + st"
+						@click="currentStatus = st; selectedStatusIndex = allStatus.indexOf(st);"
+						:class="{'primary--text': currentStatus === st}"
+					>
+						<v-list-item-icon>
+							<v-icon :color="currentStatus === st ? 'primary' : undefined">
+								{{ statusIcons[st] }}
+							</v-icon>
+						</v-list-item-icon>
+						<v-list-item-content>
+							<v-list-item-title>{{ st }}</v-list-item-title>
+						</v-list-item-content>
+						<v-list-item-action v-if="st === currentStatus">
+							<v-icon color="primary">mdi-check</v-icon>
+						</v-list-item-action>
+					</v-list-item>
+					
+					<v-divider></v-divider>
+					
+					<v-subheader>Context</v-subheader>
 					<v-list-item
 						v-for="ctx in availableContexts"
-						:key="ctx.value"
+						:key="'ctx-' + ctx.value"
 						@click="setContextAndSave(ctx.value)"
 					>
-						<v-list-item-title>
-							{{ ctx.text }}
-							<v-icon v-if="ctx.value === selectedContext" small color="primary" class="ml-2">
-								mdi-check
+						<v-list-item-icon>
+							<v-icon :color="ctx.value === selectedContext ? 'primary' : undefined">
+								mdi-filter-variant
 							</v-icon>
-						</v-list-item-title>
+						</v-list-item-icon>
+						<v-list-item-content>
+							<v-list-item-title>
+								{{ ctx.text }}
+							</v-list-item-title>
+						</v-list-item-content>
+						<v-list-item-action v-if="ctx.value === selectedContext">
+							<v-icon color="primary">mdi-check</v-icon>
+						</v-list-item-action>
 					</v-list-item>
-				</v-list>
-			</v-menu>
-
-			<!-- Mode Selection -->
-			<v-menu offset-y>
-				<template v-slot:activator="{ on, attrs }">
-					<v-btn
-						class="mr-2"
-						outlined
-						small
-						v-bind="attrs"
-						v-on="on"
-					>
-						<v-icon left small>mdi-view-module</v-icon>
-						{{ displayMode }}
-					</v-btn>
-				</template>
-				<v-list dense>
+					
+					<v-divider></v-divider>
+					
+					<v-subheader>Display Mode</v-subheader>
 					<v-list-item
 						v-for="m in allModes"
-						:key="m"
+						:key="'mode-' + m"
 						@click="setDisplayMode(m)"
 					>
-						<v-list-item-title>
-							{{ m }}
-							<v-icon v-if="m === displayMode" small color="primary" class="ml-2">
-								mdi-check
+						<v-list-item-icon>
+							<v-icon :color="m === displayMode ? 'primary' : undefined">
+								{{ m === 'Tasks' ? 'mdi-format-list-checks' : 'mdi-folder-multiple' }}
 							</v-icon>
-						</v-list-item-title>
+						</v-list-item-icon>
+						<v-list-item-content>
+							<v-list-item-title>{{ m }}</v-list-item-title>
+						</v-list-item-content>
+						<v-list-item-action v-if="m === displayMode">
+							<v-icon color="primary">mdi-check</v-icon>
+						</v-list-item-action>
 					</v-list-item>
 				</v-list>
 			</v-menu>
-
-			<v-spacer />
 			
 			<v-icon class="mr-4" size="28px" @click="toggleTheme" :title="themeTooltip">
 				{{ themeIcon }}
@@ -363,11 +452,29 @@ export default defineComponent({
   overflow: visible;
 }
 
+/* Ensure buttons have proper sizing */
+.v-btn--icon.v-size--default {
+  height: 36px;
+  width: 36px;
+}
+
+/* Ensure the app bar has proper spacing on mobile */
+.v-toolbar__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.1rem !important;
+}
+
 @media (max-width: 600px) {
+  .v-toolbar__title {
+    max-width: 150px;
+  }
+  
   .task-filters {
     flex-wrap: nowrap;
     overflow-x: auto;
-    width: 100%;
+    padding-right: 8px;
   }
 }
 </style>
