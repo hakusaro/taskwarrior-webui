@@ -136,19 +136,20 @@ export default defineComponent({
 
 		const project = ref('');
 		
-		// Get projects and filter out those with 100% completion
+		// Get projects and filter out those with 100% completion or zero tasks in context
 		const projects: ComputedRef<string[]> = computed(() => {
-			// Get all projects
+			// Get all projects from tasks that are visible in the current context
+			// (store.state.tasks already contains only tasks for the current context)
 			const allProjects = store.getters.projects;
 			
-			// Filter out projects with 100% completion
+			// Filter out projects with 100% completion or no tasks in current context
 			return allProjects.filter(projectName => {
-				// Get all tasks for this project
+				// Get all tasks for this project (already filtered for current context)
 				const projectTasks = store.state.tasks.filter(
 					(task: Task) => task.project === projectName
 				);
 				
-				// Skip empty projects
+				// Skip projects with no tasks in the current context
 				if (projectTasks.length === 0) return false;
 				
 				// Count pending tasks
