@@ -9,30 +9,136 @@
 		<TaskDialog v-model="showTaskDialog" :task="currentTask || undefined" />
 		<ColumnDialog v-model="showColumnDialog" :active-columns="headers"/>
 
+		<!-- Common Task Status Tabs -->
+		<div class="task-status-tabs mb-4">
+			<v-chip-group
+				v-model="selectedStatusIndex"
+				mandatory
+				active-class="primary--text"
+				class="px-3 py-2"
+				@change="changeStatusByIndex"
+			>
+				<v-chip
+					v-for="st in allStatus"
+					:key="st"
+					:value="allStatus.indexOf(st)"
+					:color="st === status ? 'primary' : undefined"
+					outlined
+					small
+				>
+					<v-icon left x-small>{{ statusIcons[st] }}</v-icon>
+					{{ st }}
+					<v-badge
+						v-if="st === 'pending' && classifiedTasks[st].value && classifiedTasks[st].value.length"
+						:content="classifiedTasks[st].value.length"
+						:color="st === status ? 'primary' : 'grey'"
+						inline
+						x-small
+					/>
+				</v-chip>
+			</v-chip-group>
+		</div>
+
+		<!-- Common Action Bar -->
+		<div class="task-actions px-3 mb-4 d-flex flex-wrap align-center">
+			<!-- Batch actions -->
+			<div v-show="selected.length" class="d-flex flex-wrap align-center">
+				<v-chip class="mr-2 mb-2" color="primary">
+					{{ selected.length }} selected
+				</v-chip>
+				<v-btn
+					v-show="status === 'pending'"
+					class="mr-2 mb-2"
+					color="success"
+					small
+					@click="completeTasks(selected)"
+				>
+					<v-icon left size="18">mdi-check</v-icon>Done
+				</v-btn>
+				<v-btn
+					v-show="status === 'completed' || status === 'deleted'"
+					class="mr-2 mb-2"
+					color="primary"
+					small
+					@click="restoreTasks(selected)"
+				>
+					<v-icon left size="18">mdi-restore</v-icon>Restore
+				</v-btn>
+				<v-btn
+					v-show="status !== 'deleted'"
+					class="mr-2 mb-2"
+					color="error"
+					small
+					@click="deleteTasks(selected)"
+				>
+					<v-icon left size="18">mdi-delete</v-icon>Delete
+				</v-btn>
+				<v-btn
+					class="mr-2 mb-2"
+					text
+					small
+					@click="selected = []"
+				>
+					<v-icon left size="18">mdi-close</v-icon>Clear
+				</v-btn>
+			</div>
+
+			<v-spacer v-if="selected.length" />
+
+			<!-- Global Actions -->
+			<div class="d-flex flex-wrap align-center">
+				<v-btn
+					color="primary"
+					class="mr-2 mb-2"
+					small
+					outlined
+					@click="refresh"
+					title="Refresh Tasks"
+				>
+					<v-icon left small>mdi-refresh</v-icon>
+					Refresh
+				</v-btn>
+
+				<v-btn
+					v-if="showSyncBtn"
+					color="primary"
+					class="mr-2 mb-2"
+					small
+					outlined
+					@click="syncTasks"
+					title="Sync Tasks"
+				>
+					<v-icon left small>mdi-sync</v-icon>
+					Sync
+				</v-btn>
+
+				<v-btn
+					color="primary"
+					class="mr-2 mb-2"
+					small
+					@click="newTask"
+					title="New Task"
+				>
+					<v-icon left small>mdi-plus</v-icon>
+					New Task
+				</v-btn>
+				
+				<v-btn
+					color="primary"
+					class="mb-2"
+					small
+					outlined
+					@click="showColumnDialog = true"
+					title="Configure Columns"
+				>
+					<v-icon left small>mdi-cogs</v-icon>
+					Columns
+				</v-btn>
+			</div>
+		</div>
+
 		<!-- Mobile View -->
 		<div v-if="$vuetify.breakpoint.xs" class="mobile-view pa-2">
-			<MobileTaskFilters
-				:status="status"
-				:mode="mode"
-				:show-sync-btn="showSyncBtn"
-				:available-contexts="availableContexts"
-				:active-context="activeContext"
-				:all-status="allStatus"
-				:all-modes="allModes"
-				:task-counts="taskCountMap"
-				:current-project="project"
-				:project-progress="projectProgress"
-				:projects-list="projectsList"
-				@status-change="changeStatus"
-				@context-change="changeContext"
-				@mode-change="changeMode"
-				@project-change="changeProject"
-				@refresh="refresh"
-				@sync="syncTasks"
-				@new-task="newTask"
-				@config-columns="showColumnDialog = true"
-			/>
-
 			<MobileTaskList
 				:tasks="tasks"
 				:status="status"
@@ -43,36 +149,7 @@
 		
 		<!-- Desktop View -->
 		<div v-else>
-			<v-row class="px-4 pt-4">
-				<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
-				<v-row class="pa-3">
-					<v-btn
-						v-for="st in allStatus"
-						:key="st"
-						:value="st"
-						:color="st === status ? 'primary' : undefined"
-						text
-						@click="st !== status && (selected = [])"
-					>
-						<v-icon
-							class="mr-1"
-							:color="st === status ? 'primary' : undefined"
-						>
-							{{ statusIcons[st] }}
-						</v-icon>
-						{{ st }}
-						<v-badge
-							v-if="st === 'pending' && classifiedTasks[st].value && classifiedTasks[st].value.length"
-							:content="classifiedTasks[st].value.length"
-							:color="st === status ? 'primary' : 'grey'"
-							inline
-						/>
-					</v-btn>
-				</v-row>
-			</v-btn-toggle>
-			</v-row>
-
-			<v-row class="px-4 pt-4">
+			<div class="px-3">
 				<v-data-table
 					:items="classifiedTasks[status]"
 					:headers="filteredHeaders"
@@ -80,100 +157,13 @@
 					item-key="uuid"
 					:item-class="rowClass"
 					v-model="selected"
-					class="elevation-1"
+					class="elevation-1 rounded"
 					style="width: 100%"
 					:sort-by="['urgency']"
 					:sort-desc="[true]"
 					must-sort
+					dense
 				>
-					<template v-slot:top>
-						<v-row class="px-4">
-							<!-- Batch actions -->
-							<div class="pl-2 pt-2" v-show="selected.length">
-								<v-btn
-									v-show="status === 'pending'"
-									class="ma-1 green"
-									fab
-									small
-									dark
-									title="Done"
-									@click="completeTasks(selected)"
-								>
-									<v-icon>mdi-check</v-icon>
-								</v-btn>
-								<v-btn
-									v-show="status === 'completed' || status === 'deleted'"
-									class="ma-1"
-									color="primary"
-									fab
-									dark
-									small
-									title="Restore"
-									@click="restoreTasks(selected)"
-								>
-									<v-icon>mdi-restore</v-icon>
-								</v-btn>
-								<v-btn
-									v-show="status !== 'deleted'"
-									class="ma-1 red"
-									fab
-									dark
-									small
-									title="Delete"
-									@click="deleteTasks(selected)"
-								>
-									<v-icon>mdi-delete</v-icon>
-								</v-btn>
-							</div>
-
-							<v-spacer />
-
-							<!-- Global Actions -->
-							<div class="ma-2">
-								<v-btn
-									class="green ml-1"
-									fab
-									dark
-									title="Refresh"
-									@click="refresh"
-								>
-									<v-icon>mdi-refresh</v-icon>
-								</v-btn>
-
-								<v-btn
-										v-if="showSyncBtn"
-										class="green ml-1"
-										fab
-										dark
-										title="Sync Tasks"
-										@click="syncTasks"
-									>
-										<v-icon>mdi-sync</v-icon>
-								</v-btn>
-
-								<v-btn
-									class="primary ml-1"
-									fab
-									dark
-									title="New task"
-									@click="newTask"
-								>
-									<v-icon>mdi-plus</v-icon>
-								</v-btn>
-								<v-btn
-									class="primary ml-1"
-									fab
-									dark
-									small
-									title="Configure Columns"
-									@click="showColumnDialog = true"
-								>
-									<v-icon>mdi-cogs</v-icon>
-								</v-btn>
-							</div>
-						</v-row>
-					</template>
-
 					<template v-slot:item.description="{ item }">
 						<span v-html="linkify(item.description)" />
 					</template>
@@ -191,59 +181,81 @@
 						{{ displayDate(item.until) }}
 					</template>
 
+					<template v-slot:item.priority="{ item }">
+						<v-chip
+							v-if="item.priority"
+							x-small
+							:color="priorityColor(item.priority)"
+						>
+							{{ item.priority }}
+						</v-chip>
+					</template>
+
 					<template v-slot:item.tags="{ item }">
 						<v-chip
 							v-for="tag in item.tags"
 							:key="tag"
-							small
+							x-small
+							class="mr-1"
 						>
 							{{ tag }}
 						</v-chip>
 					</template>
 
 					<template v-slot:item.urgency="{ item }">
-						{{ item.urgency }}
+						<v-chip x-small :color="urgencyColor(item.urgency)">
+							{{ Number(item.urgency).toFixed(1) }}
+						</v-chip>
 					</template>
 
 					<template v-slot:item.actions="{ item }">
-						<v-icon
-							v-show="status === 'pending'"
-							size="20px"
-							class="ml-2"
-							@click="completeTasks([item])"
-							title="Done"
-						>
-							mdi-check
-						</v-icon>
-						<v-icon
-							v-show="status === 'completed' || status === 'deleted'"
-							size="20px"
-							class="ml-2"
-							@click="restoreTasks([item])"
-							title="Restore"
-						>
-							mdi-restore
-						</v-icon>
-						<v-icon
-							class="ml-2"
-							size="20px"
-							@click="editTask(item)"
-							title="Edit"
-						>
-							mdi-pencil
-						</v-icon>
-						<v-icon
-							v-show="status !== 'deleted'"
-							class="ml-2"
-							size="20px"
-							@click="deleteTasks([item])"
-							title="Delete"
-						>
-							mdi-delete
-						</v-icon>
+						<div class="d-flex">
+							<v-btn
+								v-show="status === 'pending'"
+								icon
+								x-small
+								color="success"
+								class="mr-1"
+								@click="completeTasks([item])"
+								title="Done"
+							>
+								<v-icon>mdi-check</v-icon>
+							</v-btn>
+							<v-btn
+								v-show="status === 'completed' || status === 'deleted'"
+								icon
+								x-small
+								color="primary"
+								class="mr-1"
+								@click="restoreTasks([item])"
+								title="Restore"
+							>
+								<v-icon>mdi-restore</v-icon>
+							</v-btn>
+							<v-btn
+								icon
+								x-small
+								color="primary"
+								class="mr-1"
+								@click="editTask(item)"
+								title="Edit"
+							>
+								<v-icon>mdi-pencil</v-icon>
+							</v-btn>
+							<v-btn
+								v-show="status !== 'deleted'"
+								icon
+								x-small
+								color="error"
+								@click="deleteTasks([item])"
+								title="Delete"
+							>
+								<v-icon>mdi-delete</v-icon>
+							</v-btn>
+						</div>
 					</template>
 				</v-data-table>
-			</v-row>
+			</div>
 		</div>
 	</div>
 </template>
@@ -365,7 +377,8 @@ export default defineComponent({
 
 	setup(props, { emit }) {
 		const store = useStore<typeof accessorType>();
-		const selected = ref([] as Task[]);
+		const selected = ref<Task[]>([]);
+		const selectedStatusIndex = ref(0);
 
 		const status = ref('pending');
 		const allStatus = ['pending', 'waiting', 'completed', 'deleted', 'recurring'];
@@ -525,10 +538,37 @@ export default defineComponent({
 			return undefined;
 		};
 		
+		// Color helpers
+		const priorityColor = (priority: string) => {
+			switch (priority) {
+				case 'H': return 'error';
+				case 'M': return 'warning';
+				case 'L': return 'info';
+				default: return '';
+			}
+		};
+
+		const urgencyColor = (urgency: number) => {
+			if (urgency > 10) return 'error';
+			if (urgency > 5) return 'warning';
+			return 'grey';
+		};
+		
 		// Mobile-specific handlers
 		const changeStatus = (newStatus: string) => {
 			status.value = newStatus;
 			selected.value = [];
+			
+			// Update the chip group index
+			selectedStatusIndex.value = allStatus.indexOf(newStatus);
+		};
+		
+		// Status change from chip group
+		const changeStatusByIndex = (index: number) => {
+			if (index >= 0 && index < allStatus.length) {
+				const newStatus = allStatus[index];
+				changeStatus(newStatus);
+			}
 		};
 		
 		const changeContext = (context: string) => {
@@ -559,6 +599,7 @@ export default defineComponent({
 			allStatus,
 			statusIcons,
 			selected,
+			selectedStatusIndex,
 			showSyncBtn,
 			syncTasks,
 			newTask,
@@ -573,7 +614,10 @@ export default defineComponent({
 			confirmation,
 			displayDate,
 			rowClass,
+			priorityColor,
+			urgencyColor,
 			changeStatus,
+			changeStatusByIndex,
 			changeContext,
 			changeMode,
 			changeProject,
@@ -595,5 +639,15 @@ export default defineComponent({
 
 .v-application tr.expired-task {
   background-color: #79554844;
+}
+
+.task-status-tabs {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.task-actions {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
 }
 </style>

@@ -26,6 +26,7 @@
   
   .v-application .headline {
     font-size: 1.25rem !important;
+    font-weight: 500 !important;
   }
   
   .v-card {
@@ -41,6 +42,28 @@
     padding-left: 8px !important;
     padding-right: 8px !important;
   }
+}
+
+/* Desktop UI optimizations */
+.desktop-filters {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+  margin-bottom: 16px;
+  padding: 16px;
+}
+
+.headline {
+  font-weight: 500 !important;
+}
+
+/* Subtle shadows for cards and tables */
+.elevation-1 {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Rounded corners */
+.rounded {
+  border-radius: 4px !important;
 }
 
 /* Task status colors */
