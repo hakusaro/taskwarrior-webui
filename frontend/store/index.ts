@@ -10,7 +10,8 @@ export const state = () => ({
 		text: ''
 	},
 	settings: {
-		dark: false,
+		theme: 'system', // 'light', 'dark', 'system'
+		dark: false, // keep for backward compatibility
 		autoRefresh: '5', // in minutes
 		autoSync: '0' // in minutes
 	},
@@ -54,11 +55,23 @@ export const actions: ActionTree<RootState, RootState> = {
 	fetchSettings(context) {
 		const settings = localStorage.getItem('settings');
 		if (settings) {
-			context.commit('setSettings', JSON.parse(settings));
+			const parsedSettings = JSON.parse(settings);
+			
+			// Handle backward compatibility
+			if (parsedSettings.dark !== undefined && parsedSettings.theme === undefined) {
+				parsedSettings.theme = parsedSettings.dark ? 'dark' : 'light';
+			}
+			
+			context.commit('setSettings', parsedSettings);
 		}
 	},
 
 	updateSettings(context, settings) {
+		// Ensure dark property is kept in sync with theme for backward compatibility
+		if (settings.theme !== undefined) {
+			settings.dark = settings.theme === 'dark';
+		}
+		
 		context.commit('setSettings', settings);
 		localStorage.setItem('settings', JSON.stringify(settings));
 	},

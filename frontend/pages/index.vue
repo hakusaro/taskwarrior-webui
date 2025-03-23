@@ -86,7 +86,7 @@ export default defineComponent({
 		watch(() => store.state.settings, () => {
 			setAutoSync();
 			setAutoRefresh();
-			context.$vuetify.theme.dark = store.state.settings.dark;
+			// Theme is handled by the default layout
 		});
 
 		const mode = ref('Tasks');

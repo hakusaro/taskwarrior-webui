@@ -13,14 +13,22 @@
 					<v-list-item>
 						<v-list-item-content>
 							<v-list-item-title>
-								Dark
+								Theme
 							</v-list-item-title>
 							<v-list-item-subtitle>
-								default theme
+								appearance setting
 							</v-list-item-subtitle>
 						</v-list-item-content>
 						<v-list-item-action>
-							<v-checkbox v-model="settings.dark" />
+							<v-select
+								v-model="settings.theme"
+								:items="themeOptions"
+								item-text="text"
+								item-value="value"
+								style="width: 120px"
+								hide-details
+								dense
+							/>
 						</v-list-item-action>
 					</v-list-item>
 
@@ -102,15 +110,21 @@ export default defineComponent({
 			(str: string) => (str && !isNaN(+str) && +str >= 0) || 'invalid'
 		];
 
+		const themeOptions = [
+			{ text: 'Light', value: 'light' },
+			{ text: 'Dark', value: 'dark' },
+			{ text: 'System', value: 'system' }
+		];
+
 		const formRef = ref(null);
 		const settings = reactive({
-			dark: store.state.settings.dark,
+			theme: store.state.settings.theme || 'system',
 			autoRefresh: store.state.settings.autoRefresh,
 			autoSync: store.state.settings.autoSync
 		});
 
 		const reset = () => {
-			settings.dark = store.state.settings.dark;
+			settings.theme = store.state.settings.theme || 'system';
 			settings.autoRefresh = store.state.settings.autoRefresh;
 			settings.autoSync = store.state.settings.autoSync;
 		};
@@ -142,7 +156,8 @@ export default defineComponent({
 			reset,
 			settings,
 			numberRules,
-			formRef
+			formRef,
+			themeOptions
 		};
 	}
 });

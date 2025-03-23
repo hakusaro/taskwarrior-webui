@@ -29,8 +29,8 @@
 				Taskwarrior WebUI
 			</v-toolbar-title>
 			<v-spacer />
-			<v-icon class="mr-4" size="28px" @click="dark = !dark" title="Theme">
-				{{ dark ? 'mdi-brightness-4' : 'mdi-brightness-7' }}
+			<v-icon class="mr-4" size="28px" @click="toggleTheme" :title="themeTooltip">
+				{{ themeIcon }}
 			</v-icon>
 			<v-icon
 				class="mr-2"
@@ -51,7 +51,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, useContext, useStore, computed, onErrorCaptured, ref, watch } from '@nuxtjs/composition-api';
+import { defineComponent, useContext, useStore, computed, onErrorCaptured, ref, watch, onMounted, onBeforeUnmount } from '@nuxtjs/composition-api';
 import SettingsDialog from '../components/SettingsDialog.vue';
 import { accessorType  } from "../store";
 
@@ -62,14 +62,91 @@ export default defineComponent({
 		store.dispatch('fetchSettings');
 		store.dispatch('fetchHiddenColumns');
 
-		context.$vuetify.theme.dark = store.state.settings.dark;
-
-		const dark = computed({
-			get: () => context.$vuetify.theme.dark,
-			set: val => {
-				context.$vuetify.theme.dark = val;
+		// System theme media query
+		const prefersDarkScheme = ref(
+			typeof window !== 'undefined' && window.matchMedia 
+			? window.matchMedia('(prefers-color-scheme: dark)').matches 
+			: false
+		);
+		
+		let mediaQueryList: MediaQueryList | null = null;
+		const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+			prefersDarkScheme.value = e.matches;
+			updateTheme();
+		};
+		
+		onMounted(() => {
+			if (typeof window !== 'undefined' && window.matchMedia) {
+				mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+				mediaQueryList.addEventListener('change', handleSystemThemeChange);
 			}
 		});
+		
+		onBeforeUnmount(() => {
+			if (mediaQueryList) {
+				mediaQueryList.removeEventListener('change', handleSystemThemeChange);
+			}
+		});
+
+		// Theme handling
+		const theme = computed(() => store.state.settings.theme || 'light');
+		
+		const updateTheme = () => {
+			if (theme.value === 'system') {
+				context.$vuetify.theme.dark = prefersDarkScheme.value;
+			} else {
+				context.$vuetify.theme.dark = theme.value === 'dark';
+			}
+		};
+		
+		// Initialize theme
+		updateTheme();
+
+		// Watch for theme changes in settings
+		watch(() => store.state.settings.theme, updateTheme);
+		
+		// For backward compatibility
+		watch(() => store.state.settings.dark, (newVal) => {
+			if (theme.value !== 'system') {
+				context.$vuetify.theme.dark = newVal;
+			}
+		});
+
+		const dark = computed(() => context.$vuetify.theme.dark);
+		
+		const themeIcon = computed(() => {
+			if (theme.value === 'system') {
+				return 'mdi-theme-light-dark';
+			}
+			return dark.value ? 'mdi-brightness-4' : 'mdi-brightness-7';
+		});
+		
+		const themeTooltip = computed(() => {
+			if (theme.value === 'system') {
+				return 'Using system theme';
+			}
+			return dark.value ? 'Dark theme' : 'Light theme';
+		});
+		
+		const toggleTheme = () => {
+			// Cycle through system -> light -> dark
+			const currentTheme = theme.value;
+			let newTheme: string;
+			
+			if (currentTheme === 'system') {
+				newTheme = 'light';
+			} else if (currentTheme === 'light') {
+				newTheme = 'dark';
+			} else {
+				newTheme = 'system';
+			}
+			
+			// Update the theme in store
+			store.dispatch('updateSettings', {
+				...store.state.settings,
+				theme: newTheme
+			});
+		};
 
 		const settingsDialog = ref(false);
 
@@ -105,7 +182,9 @@ export default defineComponent({
 			snackbar,
 			notification,
 			settingsDialog,
-
+			themeIcon,
+			themeTooltip,
+			toggleTheme,
 			SettingsDialog
 		};
 	}
