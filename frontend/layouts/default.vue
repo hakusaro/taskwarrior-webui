@@ -25,9 +25,6 @@
 			<v-icon class="mr-2" color="blue">
 				mdi-sticker-check-outline
 			</v-icon>
-			<v-toolbar-title class="mr-4">
-				Taskwarrior WebUI
-			</v-toolbar-title>
 
 			<!-- Task Status Tabs - Desktop Only -->
 			<v-chip-group
