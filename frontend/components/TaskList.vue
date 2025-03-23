@@ -47,6 +47,8 @@
 			v-model="selected"
 			class="elevation-1"
 			style="width: 100%"
+			:sort-by="['urgency']"
+			:sort-desc="[true]"
 		>
 			<template v-slot:top>
 				<v-row class="px-4">
