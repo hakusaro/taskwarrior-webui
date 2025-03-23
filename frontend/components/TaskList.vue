@@ -427,7 +427,7 @@ export default defineComponent({
 				else {
 					return task.status === status;
 				}
-			}).sort((a, b) => b.urgency - a.urgency) || []);
+			}).sort((a: any, b: any) => (b.urgency || 0) - (a.urgency || 0)) || []);
 		}
 		const classifiedTasks = reactive(tempTasks);
 		

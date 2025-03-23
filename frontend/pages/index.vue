@@ -232,7 +232,7 @@ export default defineComponent({
 			const allProjects = store.getters.projects;
 			
 			// Filter out projects with 100% completion or no tasks in current context
-			return allProjects.filter(projectName => {
+			return allProjects.filter((projectName: string) => {
 				// Get all tasks for this project (already filtered for current context)
 				const projectTasks = store.state.tasks.filter(
 					(task: Task) => task.project === projectName

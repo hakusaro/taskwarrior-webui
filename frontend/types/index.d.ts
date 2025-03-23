@@ -11,3 +11,10 @@ declare module '@nuxt/types' {
 		$accessor: typeof accessorType
 	}
 }
+
+// Add urgency to Task interface from taskwarrior-lib
+declare module 'taskwarrior-lib' {
+	interface Task {
+		urgency: number;
+	}
+}
