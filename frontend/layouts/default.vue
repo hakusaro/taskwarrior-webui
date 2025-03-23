@@ -21,14 +21,37 @@
 			</template>
 		</v-snackbar>
 
-		<v-app-bar height="54px" fixed app>
+		<v-app-bar fixed app>
 			<v-icon class="mr-2" color="blue">
 				mdi-sticker-check-outline
 			</v-icon>
-			<v-toolbar-title>
+			<v-toolbar-title class="mr-4">
 				Taskwarrior WebUI
 			</v-toolbar-title>
+
+			<!-- Task Status Tabs -->
+			<v-chip-group
+				v-model="selectedStatusIndex"
+				mandatory
+				active-class="primary--text"
+				class="task-filters mr-4"
+				@change="changeStatus"
+			>
+				<v-chip
+					v-for="st in allStatus"
+					:key="st"
+					:value="allStatus.indexOf(st)"
+					:color="currentStatus === st ? 'primary' : undefined"
+					outlined
+					small
+				>
+					<v-icon left x-small>{{ statusIcons[st] }}</v-icon>
+					{{ st }}
+				</v-chip>
+			</v-chip-group>
+
 			<v-spacer />
+			
 			<v-icon class="mr-4" size="28px" @click="toggleTheme" :title="themeTooltip">
 				{{ themeIcon }}
 			</v-icon>
@@ -51,7 +74,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, useContext, useStore, computed, onErrorCaptured, ref, watch, onMounted, onBeforeUnmount } from '@nuxtjs/composition-api';
+import { defineComponent, useContext, useStore, computed, onErrorCaptured, ref, watch, onMounted, onBeforeUnmount, provide } from '@nuxtjs/composition-api';
 import SettingsDialog from '../components/SettingsDialog.vue';
 import { accessorType  } from "../store";
 
@@ -158,6 +181,33 @@ export default defineComponent({
 			});
 		};
 
+		// Task status handling
+		const currentStatus = ref('pending');
+		const selectedStatusIndex = ref(0);
+		const allStatus = ['pending', 'waiting', 'completed', 'deleted', 'recurring'];
+		const statusIcons = {
+			pending: 'mdi-clock-outline',
+			waiting: 'mdi-pause',
+			completed: 'mdi-check',
+			deleted: 'mdi-delete',
+			recurring: 'mdi-restart'
+		};
+
+		const changeStatus = (index: number) => {
+			if (index >= 0 && index < allStatus.length) {
+				currentStatus.value = allStatus[index];
+			}
+		};
+
+		// Provide status to child components
+		provide('taskStatus', {
+			currentStatus,
+			changeStatus: (status: string) => {
+				currentStatus.value = status;
+				selectedStatusIndex.value = allStatus.indexOf(status);
+			}
+		});
+
 		const settingsDialog = ref(false);
 
 		const notification = computed(() => store.state.notification);
@@ -195,8 +245,29 @@ export default defineComponent({
 			themeIcon,
 			themeTooltip,
 			toggleTheme,
-			SettingsDialog
+			SettingsDialog,
+			// Task status
+			currentStatus,
+			selectedStatusIndex,
+			allStatus,
+			statusIcons,
+			changeStatus
 		};
 	}
 });
 </script>
+
+<style>
+.task-filters {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+@media (max-width: 600px) {
+  .task-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+  }
+}
+</style>

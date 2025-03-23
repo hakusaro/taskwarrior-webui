@@ -1,10 +1,10 @@
 <template>
-	<div class="px-md-6 px-lg-12">
-		<!-- Modern controls for all views -->
-		<div class="desktop-filters" :class="{'py-4': !$vuetify.breakpoint.xs, 'py-2': $vuetify.breakpoint.xs}">
-			<!-- Title and Info -->
-			<div class="d-flex align-center mb-2">
-				<h2 class="headline mb-0 d-flex align-center">
+	<div class="px-md-6 px-lg-12 pt-3">
+		<!-- Compact Filter Controls -->
+		<div class="compact-filters mb-4">
+			<div class="d-flex flex-wrap align-center">
+				<!-- Title and Info -->
+				<h2 class="headline mb-0 mr-4 d-flex align-center">
 					<v-icon class="mr-2" color="primary">
 						{{ mode === 'Tasks' ? 'mdi-format-list-checks' : 'mdi-folder-multiple' }}
 					</v-icon>
@@ -13,8 +13,7 @@
 				
 				<!-- Project Progress (when in project mode) -->
 				<template v-if="mode === 'Projects' && project">
-					<v-icon class="mx-2 grey--text">mdi-chevron-right</v-icon>
-					<v-chip color="primary" class="px-2">
+					<v-chip color="primary" class="px-2 mr-4">
 						{{ project }}
 						<v-progress-circular
 							:size="20"
@@ -31,22 +30,19 @@
 				<!-- Context indicator -->
 				<v-chip
 					v-if="activeContextLabel && selectedContext !== 'none'"
-					class="ml-3"
+					class="mr-4"
 					color="primary"
 					small
 				>
 					<v-icon x-small left>mdi-filter</v-icon>
 					Filtered: {{ activeContextLabel }}
 				</v-chip>
-			</div>
 
-			<!-- Filter Controls -->
-			<div class="d-flex flex-wrap align-center">
 				<!-- Context Selection -->
 				<v-menu offset-y>
 					<template v-slot:activator="{ on, attrs }">
 						<v-btn
-							class="mr-2 mb-2"
+							class="mr-2"
 							outlined
 							small
 							v-bind="attrs"
@@ -76,7 +72,7 @@
 				<v-menu offset-y>
 					<template v-slot:activator="{ on, attrs }">
 						<v-btn
-							class="mr-2 mb-2"
+							class="mr-2"
 							outlined
 							small
 							v-bind="attrs"
@@ -106,7 +102,7 @@
 				<v-menu offset-y v-if="mode === 'Projects' && projects.length > 0">
 					<template v-slot:activator="{ on, attrs }">
 						<v-btn
-							class="mr-2 mb-2"
+							class="mr-2"
 							outlined
 							small
 							v-bind="attrs"

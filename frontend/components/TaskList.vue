@@ -9,36 +9,6 @@
 		<TaskDialog v-model="showTaskDialog" :task="currentTask || undefined" />
 		<ColumnDialog v-model="showColumnDialog" :active-columns="headers"/>
 
-		<!-- Common Task Status Tabs -->
-		<div class="task-status-tabs mb-4">
-			<v-chip-group
-				v-model="selectedStatusIndex"
-				mandatory
-				active-class="primary--text"
-				class="px-3 py-2"
-				@change="changeStatusByIndex"
-			>
-				<v-chip
-					v-for="st in allStatus"
-					:key="st"
-					:value="allStatus.indexOf(st)"
-					:color="st === status ? 'primary' : undefined"
-					outlined
-					small
-				>
-					<v-icon left x-small>{{ statusIcons[st] }}</v-icon>
-					{{ st }}
-					<v-badge
-						v-if="st === 'pending' && classifiedTasks[st].value && classifiedTasks[st].value.length"
-						:content="classifiedTasks[st].value.length"
-						:color="st === status ? 'primary' : 'grey'"
-						inline
-						x-small
-					/>
-				</v-chip>
-			</v-chip-group>
-		</div>
-
 		<!-- Common Action Bar -->
 		<div class="task-actions px-3 mb-4 d-flex flex-wrap align-center">
 			<!-- Batch actions -->
@@ -261,7 +231,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, useStore, computed, reactive, ref, ComputedRef, Ref } from '@nuxtjs/composition-api';
+import { defineComponent, useStore, computed, reactive, ref, ComputedRef, Ref, inject } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
 import _ from 'lodash';
 import TaskDialog from '../components/TaskDialog.vue';
@@ -378,9 +348,15 @@ export default defineComponent({
 	setup(props, { emit }) {
 		const store = useStore<typeof accessorType>();
 		const selected = ref<Task[]>([]);
-		const selectedStatusIndex = ref(0);
+		// We don't need selectedStatusIndex anymore as it's handled by the parent
 
-		const status = ref('pending');
+		// Inject task status from parent layout
+const taskStatusProvider = inject('taskStatus') as { 
+	currentStatus: Ref<string>,
+	changeStatus: (status: string) => void 
+};
+
+const status = computed(() => taskStatusProvider.currentStatus.value);
 		const allStatus = ['pending', 'waiting', 'completed', 'deleted', 'recurring'];
 		const statusIcons: { [st: string]: string } = {
 			pending: 'mdi-clock-outline',
@@ -554,13 +530,13 @@ export default defineComponent({
 			return 'grey';
 		};
 		
-		// Mobile-specific handlers
+		// Status change handler
 		const changeStatus = (newStatus: string) => {
-			status.value = newStatus;
+			taskStatusProvider.changeStatus(newStatus);
 			selected.value = [];
 			
-			// Update the chip group index
-			selectedStatusIndex.value = allStatus.indexOf(newStatus);
+			// No longer needed as status is controlled by the parent
+			
 		};
 		
 		// Status change from chip group
@@ -599,7 +575,7 @@ export default defineComponent({
 			allStatus,
 			statusIcons,
 			selected,
-			selectedStatusIndex,
+			
 			showSyncBtn,
 			syncTasks,
 			newTask,
