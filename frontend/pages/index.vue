@@ -135,7 +135,32 @@ export default defineComponent({
 		const allModes = ['Tasks', 'Projects'];
 
 		const project = ref('');
-		const projects: ComputedRef<string[]> = computed(() => store.getters.projects);
+		
+		// Get projects and filter out those with 100% completion
+		const projects: ComputedRef<string[]> = computed(() => {
+			// Get all projects
+			const allProjects = store.getters.projects;
+			
+			// Filter out projects with 100% completion
+			return allProjects.filter(projectName => {
+				// Get all tasks for this project
+				const projectTasks = store.state.tasks.filter(
+					(task: Task) => task.project === projectName
+				);
+				
+				// Skip empty projects
+				if (projectTasks.length === 0) return false;
+				
+				// Count pending tasks
+				const pendingTasks = projectTasks.filter(
+					(task: Task) => task.status === 'pending'
+				);
+				
+				// Keep project if it has at least one pending task
+				return pendingTasks.length > 0;
+			});
+		});
+		
 		watch(projects, () => {
 			if (projects.value.includes(project.value))
 				return;
