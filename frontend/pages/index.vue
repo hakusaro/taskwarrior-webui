@@ -1,61 +1,64 @@
 <template>
 	<div class="px-md-6 px-lg-12">
-		<v-row class="px-4 pt-4">
-			<div class="headline d-flex align-center">{{ mode }}</div>
-			<template v-if="mode === 'Projects'">
-				<v-icon class="mx-2">
-					mdi-chevron-right
-				</v-icon>
+		<!-- Only show the top controls on desktop view -->
+		<div v-if="!$vuetify.breakpoint.xs">
+			<v-row class="px-4 pt-4">
+				<div class="headline d-flex align-center">{{ mode }}</div>
+				<template v-if="mode === 'Projects'">
+					<v-icon class="mx-2">
+						mdi-chevron-right
+					</v-icon>
 
-				<v-select
-					class="mb-3"
-					:items="projects"
-					label="Project"
-					v-model="project"
-					style="max-width: 120px"
-					hide-details
-				/>
-				<div class="ml-6 d-flex align-center">
-					<v-progress-circular
-						:size="54"
-						:width="5"
-						:value="progress"
+					<v-select
+						class="mb-3"
+						:items="projects"
+						label="Project"
+						v-model="project"
+						style="max-width: 120px"
+						hide-details
+					/>
+					<div class="ml-6 d-flex align-center">
+						<v-progress-circular
+							:size="54"
+							:width="5"
+							:value="progress"
+							color="primary"
+						>
+							{{ progress }}%
+						</v-progress-circular>
+					</div>
+				</template>
+
+				<v-spacer />
+				<div class="d-flex align-center">
+					<v-select
+						class="mb-3 ml-3"
+						:items="availableContexts"
+						label="Context"
+						v-model="selectedContext"
+						style="max-width: 120px"
+						hide-details
+					/>
+					<v-chip
+						v-if="activeContextLabel && selectedContext !== 'none'"
+						class="ml-2 mb-3"
 						color="primary"
+						small
 					>
-						{{ progress }}%
-					</v-progress-circular>
+						<v-icon x-small left>mdi-filter</v-icon>
+						Filtered: {{ activeContextLabel }}
+					</v-chip>
 				</div>
-			</template>
-
-			<v-spacer />
-			<div class="d-flex align-center">
 				<v-select
 					class="mb-3 ml-3"
-					:items="availableContexts"
-					label="Context"
-					v-model="selectedContext"
+					:items="allModes"
+					label="Display Mode"
+					v-model="mode"
 					style="max-width: 120px"
 					hide-details
 				/>
-				<v-chip
-					v-if="activeContextLabel && selectedContext !== 'none'"
-					class="ml-2 mb-3"
-					color="primary"
-					small
-				>
-					<v-icon x-small left>mdi-filter</v-icon>
-					Filtered: {{ activeContextLabel }}
-				</v-chip>
-			</div>
-			<v-select
-				class="mb-3 ml-3"
-				:items="allModes"
-				label="Display Mode"
-				v-model="mode"
-				style="max-width: 120px"
-				hide-details
-			/>
-		</v-row>
+			</v-row>
+		</div>
 
 		<TaskList 
 			:tasks="tasks" 
@@ -65,8 +68,10 @@
 			:active-context="activeContextLabel"
 			:available-contexts="availableContexts"
 			:all-modes="allModes"
+			:projects-list="projects"
 			@context-change="selectedContext = $event"
 			@mode-change="mode = $event"
+			@project-change="project = $event"
 		/>
 	</div>
 </template>

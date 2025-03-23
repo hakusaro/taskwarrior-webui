@@ -22,9 +22,11 @@
 				:task-counts="taskCountMap"
 				:current-project="project"
 				:project-progress="projectProgress"
+				:projects-list="projectsList"
 				@status-change="changeStatus"
 				@context-change="changeContext"
 				@mode-change="changeMode"
+				@project-change="changeProject"
 				@refresh="refresh"
 				@sync="syncTasks"
 				@new-task="newTask"
@@ -354,6 +356,10 @@ export default defineComponent({
 		allModes: {
 			type: Array,
 			default: () => ['Tasks', 'Projects']
+		},
+		projectsList: {
+			type: Array,
+			default: () => []
 		}
 	},
 
@@ -533,6 +539,10 @@ export default defineComponent({
 			emit('mode-change', mode);
 		};
 		
+		const changeProject = (project: string) => {
+			emit('project-change', project);
+		};
+		
 		const showConfirmation = (data: { text: string, handler: () => void }) => {
 			confirmation.text = data.text;
 			confirmation.handler = data.handler;
@@ -566,6 +576,7 @@ export default defineComponent({
 			changeStatus,
 			changeContext,
 			changeMode,
+			changeProject,
 			showConfirmation,
 			taskCountMap
 		};

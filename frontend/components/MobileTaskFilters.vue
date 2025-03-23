@@ -92,8 +92,37 @@
         </v-list>
       </v-menu>
 
-      <div v-if="currentMode === 'Projects' && currentProject" class="mb-2">
-        <v-chip small color="primary">
+      <template v-if="currentMode === 'Projects'">
+        <v-menu offset-y v-if="projectsList.length > 0">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              small
+              outlined
+              class="mr-2 mb-2"
+              v-bind="attrs"
+              v-on="on"
+            >
+              <v-icon left small>mdi-folder</v-icon>
+              Project: {{ currentProject || 'Select' }}
+            </v-btn>
+          </template>
+          <v-list dense>
+            <v-list-item
+              v-for="proj in projectsList"
+              :key="proj"
+              @click="selectProject(proj)"
+            >
+              <v-list-item-title>
+                {{ proj }}
+                <v-icon v-if="proj === currentProject" small color="primary" class="ml-2">
+                  mdi-check
+                </v-icon>
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        
+        <v-chip v-if="currentProject" small color="primary" class="mb-2">
           {{ currentProject }}
           <v-progress-circular
             :size="16"
@@ -103,7 +132,7 @@
             class="ml-1"
           ></v-progress-circular>
         </v-chip>
-      </div>
+      </template>
     </div>
 
     <!-- Global Actions -->
@@ -196,6 +225,10 @@ export default defineComponent({
     projectProgress: {
       type: Number,
       default: 0
+    },
+    projectsList: {
+      type: Array as PropType<string[]>,
+      default: () => []
     }
   },
 
@@ -222,13 +255,18 @@ export default defineComponent({
     const selectMode = (mode: string) => {
       emit('mode-change', mode);
     };
+    
+    const selectProject = (project: string) => {
+      emit('project-change', project);
+    };
 
     return {
       selectedStatus,
       statusIcons,
       currentMode,
       selectContext,
-      selectMode
+      selectMode,
+      selectProject
     };
   }
 });
