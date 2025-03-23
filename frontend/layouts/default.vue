@@ -50,6 +50,66 @@
 				</v-chip>
 			</v-chip-group>
 
+			<!-- Context Selection -->
+			<v-menu offset-y>
+				<template v-slot:activator="{ on, attrs }">
+					<v-btn
+						class="mr-2"
+						outlined
+						small
+						v-bind="attrs"
+						v-on="on"
+					>
+						<v-icon left small>mdi-filter-variant</v-icon>
+						{{ contextText }}
+					</v-btn>
+				</template>
+				<v-list dense>
+					<v-list-item
+						v-for="ctx in availableContexts"
+						:key="ctx.value"
+						@click="setContextAndSave(ctx.value)"
+					>
+						<v-list-item-title>
+							{{ ctx.text }}
+							<v-icon v-if="ctx.value === selectedContext" small color="primary" class="ml-2">
+								mdi-check
+							</v-icon>
+						</v-list-item-title>
+					</v-list-item>
+				</v-list>
+			</v-menu>
+
+			<!-- Mode Selection -->
+			<v-menu offset-y>
+				<template v-slot:activator="{ on, attrs }">
+					<v-btn
+						class="mr-2"
+						outlined
+						small
+						v-bind="attrs"
+						v-on="on"
+					>
+						<v-icon left small>mdi-view-module</v-icon>
+						{{ displayMode }}
+					</v-btn>
+				</template>
+				<v-list dense>
+					<v-list-item
+						v-for="m in allModes"
+						:key="m"
+						@click="setDisplayMode(m)"
+					>
+						<v-list-item-title>
+							{{ m }}
+							<v-icon v-if="m === displayMode" small color="primary" class="ml-2">
+								mdi-check
+							</v-icon>
+						</v-list-item-title>
+					</v-list-item>
+				</v-list>
+			</v-menu>
+
 			<v-spacer />
 			
 			<v-icon class="mr-4" size="28px" @click="toggleTheme" :title="themeTooltip">
@@ -85,6 +145,38 @@ export default defineComponent({
 		store.dispatch('fetchSettings');
 		store.dispatch('fetchHiddenColumns');
 		store.dispatch('fetchContexts');
+		
+		// Display mode - Tasks or Projects
+		const displayMode = ref('Tasks');
+		const allModes = ['Tasks', 'Projects'];
+		
+		// Handle context selection
+		const availableContexts = computed(() => {
+			return store.state.contexts.available.map(ctx => ({
+				text: ctx === 'none' ? 'No Context' : ctx,
+				value: ctx
+			}));
+		});
+		
+		const selectedContext = computed(() => 
+			store.state.settings.context || 'none'
+		);
+		
+		const contextText = computed(() => {
+			const ctx = selectedContext.value;
+			return `Context: ${ctx === 'none' ? 'None' : ctx}`;
+		});
+		
+		const setContextAndSave = (value: string) => {
+			store.dispatch('setContext', value);
+		};
+		
+		// Set display mode and provide to children
+		const setDisplayMode = (mode: string) => {
+			displayMode.value = mode;
+			// Make displayMode available to child components
+			context.app.$root.$emit('display-mode-changed', mode);
+		};
 
 		// System theme media query
 		const prefersDarkScheme = ref(
@@ -246,7 +338,15 @@ export default defineComponent({
 			themeTooltip,
 			toggleTheme,
 			SettingsDialog,
-			// Task status
+			// Context and display mode
+			availableContexts,
+			selectedContext,
+			contextText,
+			setContextAndSave,
+			displayMode,
+			allModes,
+			setDisplayMode,
+			// Task status (no longer displayed)
 			currentStatus,
 			selectedStatusIndex,
 			allStatus,

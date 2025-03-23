@@ -1,133 +1,48 @@
 <template>
 	<div class="px-md-6 px-lg-12 pt-3">
-		<!-- Compact Filter Controls -->
-		<div class="compact-filters mb-4">
-			<div class="d-flex flex-wrap align-center">
-				<!-- Title and Info -->
-				<h2 class="headline mb-0 mr-4 d-flex align-center">
-					<v-icon class="mr-2" color="primary">
-						{{ mode === 'Tasks' ? 'mdi-format-list-checks' : 'mdi-folder-multiple' }}
-					</v-icon>
-					{{ mode }}
-				</h2>
-				
-				<!-- Project Progress (when in project mode) -->
-				<template v-if="mode === 'Projects' && project">
-					<v-chip color="primary" class="px-2 mr-4">
-						{{ project }}
-						<v-progress-circular
-							:size="20"
-							:width="3"
-							:value="progress"
-							color="white"
-							class="ml-1"
-						>
-							{{ progress }}%
-						</v-progress-circular>
-					</v-chip>
-				</template>
-				
-				<!-- Context indicator -->
-				<v-chip
-					v-if="activeContextLabel && selectedContext !== 'none'"
-					class="mr-4"
-					color="primary"
-					small
+		<!-- Project Progress (when in project mode) -->
+		<div v-if="mode === 'Projects' && project" class="mb-4">
+			<v-chip color="primary" class="px-2">
+				{{ project }}
+				<v-progress-circular
+					:size="20"
+					:width="3"
+					:value="progress"
+					color="white"
+					class="ml-1"
 				>
-					<v-icon x-small left>mdi-filter</v-icon>
-					Filtered: {{ activeContextLabel }}
-				</v-chip>
-
-				<!-- Context Selection -->
-				<v-menu offset-y>
-					<template v-slot:activator="{ on, attrs }">
-						<v-btn
-							class="mr-2"
-							outlined
-							small
-							v-bind="attrs"
-							v-on="on"
-						>
-							<v-icon left small>mdi-filter-variant</v-icon>
-							Context: {{ selectedContext === 'none' ? 'None' : selectedContext }}
-						</v-btn>
-					</template>
-					<v-list dense>
-						<v-list-item
-							v-for="ctx in availableContexts"
-							:key="ctx.value"
-							@click="selectedContext = ctx.value"
-						>
-							<v-list-item-title>
-								{{ ctx.text }}
-								<v-icon v-if="ctx.value === selectedContext" small color="primary" class="ml-2">
-									mdi-check
-								</v-icon>
-							</v-list-item-title>
-						</v-list-item>
-					</v-list>
-				</v-menu>
-
-				<!-- Mode Selection -->
-				<v-menu offset-y>
-					<template v-slot:activator="{ on, attrs }">
-						<v-btn
-							class="mr-2"
-							outlined
-							small
-							v-bind="attrs"
-							v-on="on"
-						>
-							<v-icon left small>mdi-view-module</v-icon>
-							Display: {{ mode }}
-						</v-btn>
-					</template>
-					<v-list dense>
-						<v-list-item
-							v-for="m in allModes"
-							:key="m"
-							@click="mode = m"
-						>
-							<v-list-item-title>
-								{{ m }}
-								<v-icon v-if="m === mode" small color="primary" class="ml-2">
-									mdi-check
-								</v-icon>
-							</v-list-item-title>
-						</v-list-item>
-					</v-list>
-				</v-menu>
-
-				<!-- Project Selection (when in Projects mode) -->
-				<v-menu offset-y v-if="mode === 'Projects' && projects.length > 0">
-					<template v-slot:activator="{ on, attrs }">
-						<v-btn
-							class="mr-2"
-							outlined
-							small
-							v-bind="attrs"
-							v-on="on"
-						>
-							<v-icon left small>mdi-folder</v-icon>
-							{{ project ? 'Project: ' + project : 'Select Project' }}
-						</v-btn>
-					</template>
-					<v-list dense>
-						<v-list-item
-							v-for="proj in projects"
-							:key="proj"
-							@click="project = proj"
-						>
-							<v-list-item-title>
-								{{ proj }}
-								<v-icon v-if="proj === project" small color="primary" class="ml-2">
-									mdi-check
-								</v-icon>
-							</v-list-item-title>
-						</v-list-item>
-					</v-list>
-				</v-menu>
-			</div>
+					{{ progress }}%
+				</v-progress-circular>
+			</v-chip>
+			
+			<!-- Project Selection (when in Projects mode) -->
+			<v-menu offset-y v-if="projects.length > 0" class="d-inline-block ml-2">
+				<template v-slot:activator="{ on, attrs }">
+					<v-btn
+						outlined
+						small
+						v-bind="attrs"
+						v-on="on"
+					>
+						<v-icon left small>mdi-folder</v-icon>
+						Change Project
+					</v-btn>
+				</template>
+				<v-list dense>
+					<v-list-item
+						v-for="proj in projects"
+						:key="proj"
+						@click="project = proj"
+					>
+						<v-list-item-title>
+							{{ proj }}
+							<v-icon v-if="proj === project" small color="primary" class="ml-2">
+								mdi-check
+							</v-icon>
+						</v-list-item-title>
+					</v-list-item>
+				</v-list>
+			</v-menu>
 		</div>
 
 		<TaskList 
@@ -147,7 +62,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch, ComputedRef, useStore, useContext } from '@nuxtjs/composition-api';
+import { defineComponent, ref, computed, watch, ComputedRef, useStore, useContext, onMounted, onBeforeUnmount } from '@nuxtjs/composition-api';
 import TaskList from '../components/TaskList.vue';
 import { Task } from 'taskwarrior-lib';
 import { accessorType  } from "../store";
@@ -160,6 +75,17 @@ export default defineComponent({
 		// Initialize
 		store.dispatch('fetchTasks');
 		store.dispatch('fetchContexts');
+		
+		// Listen for display mode changes from app bar
+		onMounted(() => {
+			context.app.$root.$on('display-mode-changed', (newMode: string) => {
+				mode.value = newMode;
+			});
+		});
+		
+		onBeforeUnmount(() => {
+			context.app.$root.$off('display-mode-changed');
+		});
 
 		// Auto Refresh
 		let refreshInterval: NodeJS.Timeout | null = null;
