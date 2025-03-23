@@ -61,6 +61,7 @@ export default defineComponent({
 		const store = useStore<typeof accessorType>();
 		store.dispatch('fetchSettings');
 		store.dispatch('fetchHiddenColumns');
+		store.dispatch('fetchContexts');
 
 		// System theme media query
 		const prefersDarkScheme = ref(
@@ -101,6 +102,15 @@ export default defineComponent({
 		
 		// Initialize theme
 		updateTheme();
+
+		// Initialize context if saved in settings
+		onMounted(() => {
+			// Set context from settings
+			const savedContext = store.state.settings.context;
+			if (savedContext && savedContext !== 'none') {
+				store.dispatch('setContext', savedContext);
+			}
+		});
 
 		// Watch for theme changes in settings
 		watch(() => store.state.settings.theme, updateTheme);

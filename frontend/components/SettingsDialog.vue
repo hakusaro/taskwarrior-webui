@@ -71,6 +71,28 @@
 							/>
 						</v-list-item-action>
 					</v-list-item>
+
+					<v-list-item>
+						<v-list-item-content>
+							<v-list-item-title>
+								Default Context
+							</v-list-item-title>
+							<v-list-item-subtitle>
+								taskwarrior context filter
+							</v-list-item-subtitle>
+						</v-list-item-content>
+						<v-list-item-action>
+							<v-select
+								v-model="settings.context"
+								:items="contextOptions"
+								item-text="text"
+								item-value="value"
+								style="width: 120px"
+								hide-details
+								dense
+							/>
+						</v-list-item-action>
+					</v-list-item>
 				</v-form>
 			</v-card-text>
 			<v-card-actions>
@@ -115,18 +137,34 @@ export default defineComponent({
 			{ text: 'Dark', value: 'dark' },
 			{ text: 'System', value: 'system' }
 		];
+		
+		const contextOptions = computed(() => {
+			return store.state.contexts.available.map(ctx => ({
+				text: ctx === 'none' ? 'No Context' : ctx,
+				value: ctx
+			}));
+		});
+
+		// Fetch contexts when dialog opens
+		watch(showDialog, (isOpen) => {
+			if (isOpen) {
+				store.dispatch('fetchContexts');
+			}
+		});
 
 		const formRef = ref(null);
 		const settings = reactive({
 			theme: store.state.settings.theme || 'system',
 			autoRefresh: store.state.settings.autoRefresh,
-			autoSync: store.state.settings.autoSync
+			autoSync: store.state.settings.autoSync,
+			context: store.state.settings.context || 'none'
 		});
 
 		const reset = () => {
 			settings.theme = store.state.settings.theme || 'system';
 			settings.autoRefresh = store.state.settings.autoRefresh;
 			settings.autoSync = store.state.settings.autoSync;
+			settings.context = store.state.settings.context || 'none';
 		};
 
 		const closeDialog = () => {
@@ -140,6 +178,12 @@ export default defineComponent({
 				store.dispatch('updateSettings', {
 					...settings
 				});
+				
+				// Update the context if it has changed
+				if (settings.context !== store.state.contexts.active) {
+					store.dispatch('setContext', settings.context);
+				}
+				
 				closeDialog();
 			}
 		};
@@ -157,7 +201,8 @@ export default defineComponent({
 			settings,
 			numberRules,
 			formRef,
-			themeOptions
+			themeOptions,
+			contextOptions
 		};
 	}
 });

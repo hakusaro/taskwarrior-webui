@@ -30,6 +30,14 @@
 			<v-spacer />
 			<v-select
 				class="mb-3 ml-3"
+				:items="availableContexts"
+				label="Context"
+				v-model="selectedContext"
+				style="max-width: 120px"
+				hide-details
+			/>
+			<v-select
+				class="mb-3 ml-3"
 				:items="allModes"
 				label="Display Mode"
 				v-model="mode"
@@ -52,7 +60,10 @@ export default defineComponent({
 	setup() {
 		const store = useStore<typeof accessorType>();
 		const context = useContext();
+		
+		// Initialize
 		store.dispatch('fetchTasks');
+		store.dispatch('fetchContexts');
 
 		// Auto Refresh
 		let refreshInterval: NodeJS.Timeout | null = null;
@@ -87,6 +98,21 @@ export default defineComponent({
 			setAutoSync();
 			setAutoRefresh();
 			// Theme is handled by the default layout
+		});
+		
+		// Context handling
+		const availableContexts = computed(() => {
+			return store.state.contexts.available.map(ctx => ({
+				text: ctx === 'none' ? 'No Context' : ctx,
+				value: ctx
+			}));
+		});
+		
+		const selectedContext = computed({
+			get: () => store.state.settings.context || 'none',
+			set: (value: string) => {
+				store.dispatch('setContext', value);
+			}
 		});
 
 		const mode = ref('Tasks');
@@ -133,7 +159,9 @@ export default defineComponent({
 			tasks,
 			projects,
 			project,
-			progress
+			progress,
+			availableContexts,
+			selectedContext
 		};
 	}
 });

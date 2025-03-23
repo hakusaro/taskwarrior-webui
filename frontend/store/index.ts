@@ -13,7 +13,12 @@ export const state = () => ({
 		theme: 'system', // 'light', 'dark', 'system'
 		dark: false, // keep for backward compatibility
 		autoRefresh: '5', // in minutes
-		autoSync: '0' // in minutes
+		autoSync: '0', // in minutes
+		context: 'none' // selected taskwarrior context
+	},
+	contexts: {
+		available: [] as string[],
+		active: 'none'
 	},
 	hiddenColumns: [] as string[]
 });
@@ -40,6 +45,14 @@ export const mutations: MutationTree<RootState> = {
 		state.hiddenColumns = hiddenColumns
 	},
 
+	setContexts(state, contexts) {
+		state.contexts = contexts;
+	},
+
+	setActiveContext(state, context) {
+		state.contexts.active = context;
+	},
+
 	setNotification(state, notification) {
 		state.notification = notification;
 		// Show notification
@@ -60,6 +73,11 @@ export const actions: ActionTree<RootState, RootState> = {
 			// Handle backward compatibility
 			if (parsedSettings.dark !== undefined && parsedSettings.theme === undefined) {
 				parsedSettings.theme = parsedSettings.dark ? 'dark' : 'light';
+			}
+			
+			// Initialize context if not present
+			if (parsedSettings.context === undefined) {
+				parsedSettings.context = 'none';
 			}
 			
 			context.commit('setSettings', parsedSettings);
@@ -86,6 +104,49 @@ export const actions: ActionTree<RootState, RootState> = {
 	updateHiddenColumns(context, columns) {
 		context.commit('setHiddenColumns', columns);
 		localStorage.setItem('hiddenColumns', JSON.stringify(columns));
+	},
+
+	async fetchContexts(context) {
+		try {
+			const response = await this.$axios.$get('/api/tasks/contexts');
+			context.commit('setContexts', {
+				available: response.contexts,
+				active: response.active
+			});
+		} catch (error) {
+			console.error('Error fetching contexts:', error);
+			context.commit('setNotification', {
+				color: 'error',
+				text: 'Failed to load Taskwarrior contexts'
+			});
+		}
+	},
+
+	async setContext(context, contextName) {
+		try {
+			await this.$axios.$post(`/api/tasks/context/${contextName}`);
+			context.commit('setActiveContext', contextName);
+			
+			// Update stored setting
+			const settings = { ...context.state.settings, context: contextName };
+			context.dispatch('updateSettings', settings);
+			
+			// Refresh tasks to reflect the new context
+			await context.dispatch('fetchTasks');
+			
+			context.commit('setNotification', {
+				color: 'success',
+				text: contextName === 'none' 
+					? 'Context cleared' 
+					: `Context set to: ${contextName}`
+			});
+		} catch (error) {
+			console.error('Error setting context:', error);
+			context.commit('setNotification', {
+				color: 'error',
+				text: 'Failed to set Taskwarrior context'
+			});
+		}
 	},
 
 	async fetchTasks(context) {
