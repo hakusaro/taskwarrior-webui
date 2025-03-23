@@ -11,52 +11,53 @@
 
 		<!-- Common Action Bar -->
 		<div class="task-actions px-3 mb-4 d-flex flex-wrap align-center">
-			<!-- Batch actions -->
-			<div v-show="selected.length" class="d-flex flex-wrap align-center">
-				<v-chip class="mr-2 mb-2" color="primary">
-					{{ selected.length }} selected
-				</v-chip>
-				<v-btn
-					v-show="status === 'pending'"
-					class="mr-2 mb-2"
-					color="success"
-					small
-					@click="completeTasks(selected)"
-				>
-					<v-icon left size="18">mdi-check</v-icon>Done
-				</v-btn>
-				<v-btn
-					v-show="status === 'completed' || status === 'deleted'"
-					class="mr-2 mb-2"
-					color="primary"
-					small
-					@click="restoreTasks(selected)"
-				>
-					<v-icon left size="18">mdi-restore</v-icon>Restore
-				</v-btn>
-				<v-btn
-					v-show="status !== 'deleted'"
-					class="mr-2 mb-2"
-					color="error"
-					small
-					@click="deleteTasks(selected)"
-				>
-					<v-icon left size="18">mdi-delete</v-icon>Delete
-				</v-btn>
-				<v-btn
-					class="mr-2 mb-2"
-					text
-					small
-					@click="selected = []"
-				>
-					<v-icon left size="18">mdi-close</v-icon>Clear
-				</v-btn>
-			</div>
+			<!-- Batch actions - Only visible when items are selected -->
+			<template v-if="selected.length">
+				<div class="d-flex flex-wrap align-center">
+					<v-chip class="mr-2 mb-2" color="primary">
+						{{ selected.length }} selected
+					</v-chip>
+					<v-btn
+						v-show="status === 'pending'"
+						class="mr-2 mb-2"
+						color="success"
+						small
+						@click="completeTasks(selected)"
+					>
+						<v-icon left size="18">mdi-check</v-icon>Done
+					</v-btn>
+					<v-btn
+						v-show="status === 'completed' || status === 'deleted'"
+						class="mr-2 mb-2"
+						color="primary"
+						small
+						@click="restoreTasks(selected)"
+					>
+						<v-icon left size="18">mdi-restore</v-icon>Restore
+					</v-btn>
+					<v-btn
+						v-show="status !== 'deleted'"
+						class="mr-2 mb-2"
+						color="error"
+						small
+						@click="deleteTasks(selected)"
+					>
+						<v-icon left size="18">mdi-delete</v-icon>Delete
+					</v-btn>
+					<v-btn
+						class="mr-2 mb-2"
+						text
+						small
+						@click="selected = []"
+					>
+						<v-icon left size="18">mdi-close</v-icon>Clear
+					</v-btn>
+				</div>
+				<v-spacer />
+			</template>
 
-			<v-spacer v-if="selected.length" />
-
-			<!-- Global Actions -->
-			<div class="d-flex flex-wrap align-center">
+			<!-- Global Actions - Always visible -->
+			<div class="d-flex flex-wrap align-center ml-auto">
 				<v-btn
 					color="primary"
 					class="mr-2 mb-2"
