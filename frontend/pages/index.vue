@@ -28,14 +28,24 @@
 			</template>
 
 			<v-spacer />
-			<v-select
-				class="mb-3 ml-3"
-				:items="availableContexts"
-				label="Context"
-				v-model="selectedContext"
-				style="max-width: 120px"
-				hide-details
-			/>
+			<div class="d-flex align-center">
+				<v-select
+					class="mb-3 ml-3"
+					:items="availableContexts"
+					label="Context"
+					v-model="selectedContext"
+					style="max-width: 120px"
+					hide-details
+				/>
+				<v-chip
+					v-if="activeContextLabel && selectedContext !== 'none'"
+					class="ml-2 mb-3"
+					color="primary"
+					small
+				>
+					{{ activeContextLabel }}
+				</v-chip>
+			</div>
 			<v-select
 				class="mb-3 ml-3"
 				:items="allModes"
@@ -114,6 +124,11 @@ export default defineComponent({
 				store.dispatch('setContext', value);
 			}
 		});
+		
+		const activeContextLabel = computed(() => {
+			const context = store.state.contexts.active;
+			return context && context !== 'none' ? context : '';
+		});
 
 		const mode = ref('Tasks');
 		const allModes = ['Tasks', 'Projects'];
@@ -161,7 +176,8 @@ export default defineComponent({
 			project,
 			progress,
 			availableContexts,
-			selectedContext
+			selectedContext,
+			activeContextLabel
 		};
 	}
 });

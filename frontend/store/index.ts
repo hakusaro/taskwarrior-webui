@@ -150,8 +150,19 @@ export const actions: ActionTree<RootState, RootState> = {
 	},
 
 	async fetchTasks(context) {
-		const tasks: Task[] = await this.$axios.$get('/api/tasks');
+		const response = await this.$axios.$get('/api/tasks');
+		const { tasks, context: activeContext } = response;
+		
 		context.commit('setTasks', tasks);
+		
+		// Update active context if it changed
+		if (activeContext && activeContext !== context.state.contexts.active) {
+			context.commit('setActiveContext', activeContext);
+			// Update settings to match
+			const settings = { ...context.state.settings, context: activeContext };
+			context.commit('setSettings', settings);
+			localStorage.setItem('settings', JSON.stringify(settings));
+		}
 	},
 
 	async deleteTasks(context, tasks: Task[]) {

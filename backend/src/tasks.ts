@@ -7,8 +7,26 @@ import { Task } from "taskwarrior-lib";
 const router = new Router();
 
 router.get('/', async ctx => {
-	const tasks = taskwarrior.load();
-	ctx.body = tasks;
+	try {
+		// Load tasks through TaskwarriorLib, which should respect the active context
+		const tasks = taskwarrior.load();
+		
+		// Add a flag to indicate if a context is active
+		const contextInfo = execSync('task context').toString().trim();
+		const activeContext = contextInfo.split('\n')
+			.find(line => line.includes('yes'))
+			?.split(/\s+/)[0] || 'none';
+		
+		// Send both tasks and context info to the client
+		ctx.body = {
+			tasks,
+			context: activeContext
+		};
+	} catch (error) {
+		console.error('Error loading tasks:', error);
+		ctx.status = 500;
+		ctx.body = { error: 'Failed to load tasks' };
+	}
 });
 
 router.put('/', async ctx => {
