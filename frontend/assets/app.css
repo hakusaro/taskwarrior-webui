@@ -17,3 +17,64 @@
 .v-application.task-app code:after {
 	content: initial;
 }
+
+/* Mobile optimizations */
+@media (max-width: 600px) {
+  .container {
+    padding: 0 !important;
+  }
+  
+  .v-application .headline {
+    font-size: 1.25rem !important;
+  }
+  
+  .v-card {
+    border-radius: 4px !important;
+  }
+  
+  .v-chip {
+    height: 24px !important;
+  }
+  
+  .mobile-view {
+    margin: 0;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+}
+
+/* Task status colors */
+.recur-task {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-left-color: #2196F3 !important;
+}
+
+.urgent-task {
+  background-color: rgba(244, 67, 54, 0.1);
+  border-left-color: #F44336 !important;
+}
+
+.expired-task {
+  background-color: rgba(121, 85, 72, 0.1);
+  border-left-color: #795548 !important;
+}
+
+/* Better links */
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Improve button spacing */
+.v-btn {
+  text-transform: none !important;
+}
+
+/* Improve table density */
+.v-data-table td {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}

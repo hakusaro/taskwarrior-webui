@@ -57,7 +57,17 @@
 			/>
 		</v-row>
 
-		<TaskList :tasks="tasks" />
+		<TaskList 
+			:tasks="tasks" 
+			:mode="mode"
+			:project="project"
+			:project-progress="progress"
+			:active-context="activeContextLabel"
+			:available-contexts="availableContexts"
+			:all-modes="allModes"
+			@context-change="selectedContext = $event"
+			@mode-change="mode = $event"
+		/>
 	</div>
 </template>
 
