@@ -49,6 +49,7 @@
 			style="width: 100%"
 			:sort-by="['urgency']"
 			:sort-desc="[true]"
+			must-sort
 		>
 			<template v-slot:top>
 				<v-row class="px-4">
@@ -314,7 +315,7 @@ export default defineComponent({
 				: [{ text: 'Wait', value: 'wait' }]),
 			{ text: 'Until', value: 'until' },
 			{ text: 'Tags', value: 'tags' },
-			{ text: 'Urgency', value: 'urgency', sort: (a: number, b: number) => b - a },
+			{ text: 'Urgency', value: 'urgency' },
 			{ text: 'Actions', value: 'actions', sortable: false }
 		]);
 
@@ -338,7 +339,7 @@ export default defineComponent({
 				else {
 					return task.status === status;
 				}
-			}));
+			}).sort((a, b) => b.urgency - a.urgency));
 		}
 		const classifiedTasks = reactive(tempTasks);
 
