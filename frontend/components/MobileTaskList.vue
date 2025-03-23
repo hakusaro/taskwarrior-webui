@@ -54,11 +54,10 @@
     >
       <div class="d-flex align-center task-card-header pa-2">
         <v-checkbox
-          v-model="selected"
-          :value="task"
+          :input-value="isSelected(task)"
           class="mr-1 mt-0 pt-0"
           hide-details
-          @click.stop
+          @click.stop="toggleSelect(task)"
         ></v-checkbox>
         
         <div class="task-project" v-if="task.project">
@@ -251,7 +250,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore<typeof accessorType>();
-    const selected = ref([] as Task[]);
+    const selected = ref<Task[]>([]);
 
     const allStatus = ['pending', 'waiting', 'completed', 'deleted', 'recurring'];
 
@@ -364,10 +363,18 @@ export default defineComponent({
     };
 
     const isSelected = (task: Task) => {
+      if (!Array.isArray(selected.value)) {
+        selected.value = [];
+        return false;
+      }
       return selected.value.findIndex(t => t.uuid === task.uuid) !== -1;
     };
 
     const toggleSelect = (task: Task) => {
+      if (!Array.isArray(selected.value)) {
+        selected.value = [];
+      }
+      
       const index = selected.value.findIndex(t => t.uuid === task.uuid);
       if (index === -1) {
         selected.value.push(task);
