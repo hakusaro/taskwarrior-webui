@@ -18,9 +18,9 @@ router.get('/', async ctx => {
 		
 		console.log(`Active context detected: ${activeContext}`);
 		
-		// Get tasks using export command - the context filter is applied by Taskwarrior itself
-		// Use the actual 'task' command output which will respect the filter
-		const tasksJson = execSync('task export').toString();
+		// Get tasks using export command with explicit context filter
+		// "rc.context=1" ensures the context filter is applied
+		const tasksJson = execSync('task rc.context=1 export').toString();
 		const tasksFromCli = JSON.parse(tasksJson);
 		
 		// Log task count for debugging
@@ -107,8 +107,9 @@ router.post('/context/:name', async ctx => {
 		const contextInfo = execSync('task context').toString().trim();
 		console.log('Context info:', contextInfo);
 		
-		// Get tasks after context switch to ensure we return the filtered list
-		const tasksJson = execSync('task export').toString();
+		// Get tasks after context switch with explicit context filter
+		// "rc.context=1" ensures the context filter is applied
+		const tasksJson = execSync('task rc.context=1 export').toString();
 		const tasks = JSON.parse(tasksJson);
 		
 		// Log task count for debugging
