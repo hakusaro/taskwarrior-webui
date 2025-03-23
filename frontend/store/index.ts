@@ -124,15 +124,16 @@ export const actions: ActionTree<RootState, RootState> = {
 
 	async setContext(context, contextName) {
 		try {
-			await this.$axios.$post(`/api/tasks/context/${contextName}`);
+			// This now returns the already filtered tasks
+			const response = await this.$axios.$post(`/api/tasks/context/${contextName}`);
 			context.commit('setActiveContext', contextName);
 			
 			// Update stored setting
 			const settings = { ...context.state.settings, context: contextName };
 			context.dispatch('updateSettings', settings);
 			
-			// Refresh tasks to reflect the new context
-			await context.dispatch('fetchTasks');
+			// Update tasks directly from the response
+			context.commit('setTasks', response.tasks);
 			
 			context.commit('setNotification', {
 				color: 'success',

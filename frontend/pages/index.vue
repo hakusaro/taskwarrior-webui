@@ -43,6 +43,7 @@
 					color="primary"
 					small
 				>
+					<v-icon x-small left>mdi-filter</v-icon>
 					{{ activeContextLabel }}
 				</v-chip>
 			</div>

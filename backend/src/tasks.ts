@@ -8,18 +8,27 @@ const router = new Router();
 
 router.get('/', async ctx => {
 	try {
-		// Load tasks through TaskwarriorLib, which should respect the active context
-		const tasks = taskwarrior.load();
-		
-		// Add a flag to indicate if a context is active
+		// Get the active context information first
 		const contextInfo = execSync('task context').toString().trim();
+		console.log('Context info at task load:', contextInfo);
+		
 		const activeContext = contextInfo.split('\n')
 			.find(line => line.includes('yes'))
 			?.split(/\s+/)[0] || 'none';
 		
+		console.log(`Active context detected: ${activeContext}`);
+		
+		// Get tasks using export command - the context filter is applied by Taskwarrior itself
+		// Use the actual 'task' command output which will respect the filter
+		const tasksJson = execSync('task export').toString();
+		const tasksFromCli = JSON.parse(tasksJson);
+		
+		// Log task count for debugging
+		console.log(`Loaded ${tasksFromCli.length} tasks with context: ${activeContext}`);
+		
 		// Send both tasks and context info to the client
 		ctx.body = {
-			tasks,
+			tasks: tasksFromCli,
 			context: activeContext
 		};
 	} catch (error) {
@@ -37,10 +46,17 @@ router.put('/', async ctx => {
 });
 
 router.delete('/', async ctx => {
-	const tasks = ctx.query.tasks as string[];
-	const msg = taskwarrior.del(tasks.map(t => ({ uuid: t })));
-	console.log(msg);
-	ctx.status = 200;
+	try {
+		const tasks = ctx.query.tasks as string[];
+		// Use taskwarrior library for deleting tasks
+		const msg = taskwarrior.del(tasks.map(t => ({ uuid: t })));
+		console.log(msg);
+		ctx.status = 200;
+	} catch (error) {
+		console.error('Error deleting tasks:', error);
+		ctx.status = 500;
+		ctx.body = { error: 'Failed to delete tasks' };
+	}
 });
 
 // Get all available contexts
@@ -81,12 +97,30 @@ router.post('/context/:name', async ctx => {
 		
 		if (contextName === 'none') {
 			execSync('task context none');
+			console.log('Context set to none');
 		} else {
 			execSync(`task context ${contextName}`);
+			console.log(`Context set to ${contextName}`);
 		}
 		
+		// Log the active context
+		const contextInfo = execSync('task context').toString().trim();
+		console.log('Context info:', contextInfo);
+		
+		// Get tasks after context switch to ensure we return the filtered list
+		const tasksJson = execSync('task export').toString();
+		const tasks = JSON.parse(tasksJson);
+		
+		// Log task count for debugging
+		const taskCount = tasks.length;
+		console.log(`Loaded ${taskCount} tasks with context: ${contextName}`);
+		
 		ctx.status = 200;
-		ctx.body = { success: true, context: contextName };
+		ctx.body = { 
+			success: true, 
+			context: contextName,
+			tasks
+		};
 	} catch (error) {
 		console.error('Error setting context:', error);
 		ctx.status = 500;
