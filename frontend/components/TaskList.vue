@@ -247,6 +247,7 @@
 					:sort-desc="[true]"
 					must-sort
 					dense
+					fixed-header
 					:items-per-page="-1"
 				>
 					<template v-slot:item.description="{ item }">
@@ -753,5 +754,22 @@ export default defineComponent({
   text-transform: none !important;
   letter-spacing: 0 !important;
   border-radius: 4px !important; /* Less rounded corners */
+}
+
+/* Stronger fix for header alignment */
+.v-data-table thead tr,
+.v-data-table thead th {
+  height: 48px !important;
+}
+
+/* Ensure all header text is vertically centered */
+.v-data-table thead th .v-data-table-header__icon,
+.v-data-table thead th .v-data-table-header__align-center,
+.v-data-table thead th .v-data-table-header__align-end,
+.v-data-table thead th .v-data-table-header__align-start {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  line-height: 1 !important;
 }
 </style>
