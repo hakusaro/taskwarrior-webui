@@ -58,7 +58,7 @@
 
 			<!-- Project controls - Left aligned when in Projects mode -->
 			<div v-if="showProjectSelector && !selected.length" class="d-flex flex-wrap align-center mr-auto">
-				<!-- Project Selection Dropdown -->
+				<!-- Combined Project Selection and Status Display -->
 				<v-menu offset-y class="mr-2 mb-2">
 					<template v-slot:activator="{ on, attrs }">
 						<v-btn
@@ -68,9 +68,22 @@
 							v-bind="attrs"
 							v-on="on"
 							:disabled="projectsList.length === 0"
+							class="combined-project-btn"
 						>
 							<v-icon left small>mdi-folder</v-icon>
-							{{ project ? 'Change Project' : 'Select Project' }}
+							<span>{{ project || 'Select Project' }}</span>
+							
+							<!-- Only show progress info when a project is selected -->
+							<template v-if="project">
+								<v-progress-circular
+									:size="16"
+									:width="2"
+									:value="projectProgress"
+									color="primary"
+									class="mx-1"
+								></v-progress-circular>
+								<span class="primary--text text-caption">{{ projectProgress }}%</span>
+							</template>
 						</v-btn>
 					</template>
 					<v-list dense>
@@ -94,19 +107,6 @@
 					</v-list>
 				</v-menu>
 				
-				<!-- Project Progress Indicator - completely separated elements -->
-				<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3 d-flex align-center">
-					<span style="min-width: 40px; display: inline-block; margin-right: 12px;">{{ project }}</span>
-					<v-progress-circular
-						:size="20"
-						:width="3"
-						:value="projectProgress"
-						color="white"
-						class="mr-1"
-					></v-progress-circular>
-					<span class="white--text text-caption">{{ projectProgress }}%</span>
-				</v-chip>
-				
 				<!-- No Projects Available Message -->
 				<v-chip v-if="!project && projectsList.length === 0" outlined class="mr-2 mb-2" color="info">
 					<v-icon left small>mdi-information</v-icon>
@@ -121,7 +121,7 @@
 			<div class="d-flex flex-wrap align-center" :class="{'ml-auto': !showProjectSelector || selected.length}">
 				<!-- Project Selector embedded in global actions (only shows when not already in the left section) -->
 				<template v-if="showProjectSelector && selected.length">
-					<!-- Project Selection Dropdown -->
+					<!-- Combined Project Selection and Status Display -->
 					<v-menu offset-y class="mr-2 mb-2">
 						<template v-slot:activator="{ on, attrs }">
 							<v-btn
@@ -131,9 +131,22 @@
 								v-bind="attrs"
 								v-on="on"
 								:disabled="projectsList.length === 0"
+								class="combined-project-btn"
 							>
 								<v-icon left small>mdi-folder</v-icon>
-								{{ project ? 'Change Project' : 'Select Project' }}
+								<span>{{ project || 'Select Project' }}</span>
+								
+								<!-- Only show progress info when a project is selected -->
+								<template v-if="project">
+									<v-progress-circular
+										:size="16"
+										:width="2"
+										:value="projectProgress"
+										color="primary"
+										class="mx-1"
+									></v-progress-circular>
+									<span class="primary--text text-caption">{{ projectProgress }}%</span>
+								</template>
 							</v-btn>
 						</template>
 						<v-list dense>
@@ -156,19 +169,6 @@
 							</v-list-item>
 						</v-list>
 					</v-menu>
-					
-					<!-- Project Progress Indicator - completely separated elements -->
-					<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3 d-flex align-center">
-						<span style="min-width: 40px; display: inline-block; margin-right: 12px;">{{ project }}</span>
-						<v-progress-circular
-							:size="20"
-							:width="3"
-							:value="projectProgress"
-							color="white"
-							class="mr-1"
-						></v-progress-circular>
-						<span class="white--text text-caption">{{ projectProgress }}%</span>
-					</v-chip>
 				</template>
 				
 				<v-btn
@@ -745,5 +745,12 @@ export default defineComponent({
   background-color: rgba(0, 0, 0, 0.02);
 }
 
-/* No longer needed - using standard Vuetify classes instead */
+/* Combined project button styling */
+.combined-project-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  border-radius: 4px !important; /* Less rounded corners */
+}
 </style>
