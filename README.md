@@ -1,3 +1,16 @@
+# Fork prelude
+
+This is a fork of taskwarrior-webui as an experiment to test Claude Code to fix some issues with the main project. The main changes are:
+
+1. Supports saving and using the system theme (dark/light mode) instead of manually being set.
+1. Supports contexts and switching between them and filters by context.
+1. Collapses many UI elements into the top navbar.
+1. On mobile, displays things in a more fluid way to allow for displaying various task properties without being in a table layout.
+1. Urgency sort is the default, and it has nice chips and coloring on the urgency value.
+1. Shows all rows by default.
+
+The last thing that went really wild was trying to get the column sort icons next to the headers. That really didn't want to work. The total cost of these changes using Claude Code was $40.12. This was significantly limited by the fact that the Replace function in Claude Code is broken so it kept falling back to sed, cat, grep, and find to edit files.
+
 # Taskwarrior-webui
 
 [![Docker Image Size](https://badgen.net/docker/size/dcsunset/taskwarrior-webui)](https://hub.docker.com/r/dcsunset/taskwarrior-webui)
