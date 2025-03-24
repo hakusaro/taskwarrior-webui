@@ -247,6 +247,7 @@
 					:sort-desc="[true]"
 					must-sort
 					dense
+					:items-per-page="-1"
 				>
 					<template v-slot:item.description="{ item }">
 						<span v-html="linkify(item.description)" />

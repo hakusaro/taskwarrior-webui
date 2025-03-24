@@ -20,6 +20,7 @@ export const state = () => ({
 		available: [] as string[],
 		active: 'none'
 	},
+	// Empty array means show all columns
 	hiddenColumns: [] as string[]
 });
 
@@ -106,6 +107,10 @@ export const actions: ActionTree<RootState, RootState> = {
 		const columns = localStorage.getItem('hiddenColumns');
 		if (columns) {
 			context.commit('setHiddenColumns', JSON.parse(columns));
+		} else {
+			// Set default to empty array (show all columns)
+			context.commit('setHiddenColumns', []);
+			localStorage.setItem('hiddenColumns', JSON.stringify([]));
 		}
 	},
 
