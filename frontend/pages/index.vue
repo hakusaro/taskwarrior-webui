@@ -1,34 +1,27 @@
 <template>
 	<div class="px-md-6 px-lg-12 pt-3">
-		<!-- Project Progress (when in project mode) -->
-		<div v-if="mode === 'Projects' && project" class="mb-4">
-			<v-chip color="primary" class="px-2">
-				{{ project }}
-				<v-progress-circular
-					:size="20"
-					:width="3"
-					:value="progress"
-					color="white"
-					class="ml-1"
-				>
-					{{ progress }}%
-				</v-progress-circular>
-			</v-chip>
-			
-			<!-- Project Selection (when in Projects mode) -->
-			<v-menu offset-y v-if="projects.length > 0" class="d-inline-block ml-2">
+		<!-- Project Selection & Progress (when in Projects mode) -->
+		<div v-if="mode === 'Projects'" class="mb-4">
+			<!-- Show project selection button -->
+			<v-menu offset-y class="d-inline-block">
 				<template v-slot:activator="{ on, attrs }">
 					<v-btn
 						outlined
 						small
 						v-bind="attrs"
 						v-on="on"
+						:disabled="projects.length === 0"
 					>
 						<v-icon left small>mdi-folder</v-icon>
-						Change Project
+						{{ project ? 'Change Project' : 'Select Project' }}
 					</v-btn>
 				</template>
 				<v-list dense>
+					<v-list-item v-if="projects.length === 0">
+						<v-list-item-title class="text-caption">
+							No projects available
+						</v-list-item-title>
+					</v-list-item>
 					<v-list-item
 						v-for="proj in projects"
 						:key="proj"
@@ -43,6 +36,26 @@
 					</v-list-item>
 				</v-list>
 			</v-menu>
+
+			<!-- Show project progress chip only if a project is selected -->
+			<v-chip v-if="project" color="primary" class="px-2 ml-2">
+				{{ project }}
+				<v-progress-circular
+					:size="20"
+					:width="3"
+					:value="progress"
+					color="white"
+					class="ml-1"
+				>
+					{{ progress }}%
+				</v-progress-circular>
+			</v-chip>
+			
+			<!-- Message when no projects available -->
+			<v-chip v-if="!project && projects.length === 0" outlined class="ml-2" color="info">
+				<v-icon left small>mdi-information</v-icon>
+				No projects available
+			</v-chip>
 		</div>
 
 		<TaskList 
@@ -78,13 +91,82 @@ export default defineComponent({
 		
 		// Listen for display mode changes from app bar
 		onMounted(() => {
-			context.app.$root.$on('display-mode-changed', (newMode: string) => {
-				mode.value = newMode;
-			});
+			console.log('Index.vue mounted, setting up mode change listeners');
+			
+			// Check if mode is passed in URL
+			if (typeof window !== 'undefined') {
+				const urlParams = new URLSearchParams(window.location.search);
+				const modeParam = urlParams.get('mode');
+				if (modeParam && (modeParam === 'Tasks' || modeParam === 'Projects')) {
+					console.log('Setting mode from URL parameter:', modeParam);
+					mode.value = modeParam;
+				}
+				
+				// Check if mode was set by direct navigation or global variable
+				if ((window as any).__forceDisplayMode) {
+					console.log('Setting mode from global variable:', (window as any).__forceDisplayMode);
+					mode.value = (window as any).__forceDisplayMode;
+					delete (window as any).__forceDisplayMode;
+				}
+				
+				// Also set up a periodic check for the global variable
+				const modeCheckInterval = setInterval(() => {
+					if ((window as any).__currentDisplayMode) {
+						console.log('Setting mode from periodic check of global variable:', (window as any).__currentDisplayMode);
+						mode.value = (window as any).__currentDisplayMode;
+						delete (window as any).__currentDisplayMode;
+					}
+				}, 200);
+				
+				// Store the interval for cleanup
+				(window as any).__modeCheckInterval = modeCheckInterval;
+			}
+			
+			// Listen for event via $root (traditional Vue event bus)
+			if (context.app && context.app.$root) {
+				context.app.$root.$on('display-mode-changed', (newMode: string) => {
+					console.log('Received mode change via $root:', newMode);
+					mode.value = newMode;
+				});
+			}
+			
+			// Also listen for window event (fallback method)
+			if (typeof window !== 'undefined') {
+				const handleModeChange = (event: CustomEvent) => {
+					console.log('Received mode change via window event:', event.detail);
+					mode.value = event.detail;
+				};
+				
+				window.addEventListener('display-mode-changed', handleModeChange as EventListener);
+				
+				// Store the handler for cleanup
+				(window as any).__modeChangeHandler = handleModeChange;
+			}
 		});
 		
 		onBeforeUnmount(() => {
-			context.app.$root.$off('display-mode-changed');
+			// Clean up all event listeners
+			if (context.app && context.app.$root) {
+				context.app.$root.$off('display-mode-changed');
+			}
+			
+			if (typeof window !== 'undefined') {
+				// Clear event listener
+				if ((window as any).__modeChangeHandler) {
+					window.removeEventListener('display-mode-changed', (window as any).__modeChangeHandler as EventListener);
+					delete (window as any).__modeChangeHandler;
+				}
+				
+				// Clear interval
+				if ((window as any).__modeCheckInterval) {
+					clearInterval((window as any).__modeCheckInterval);
+					delete (window as any).__modeCheckInterval;
+				}
+				
+				// Clean up any leftover global variables
+				delete (window as any).__forceDisplayMode;
+				delete (window as any).__currentDisplayMode;
+			}
 		});
 
 		// Auto Refresh
@@ -180,6 +262,15 @@ export default defineComponent({
 				project.value = projects.value[0];
 			else
 				project.value = '';
+		});
+		
+		// Watch for mode changes and automatically select a project when switching to Projects mode
+		watch(mode, (newMode) => {
+			console.log('Mode changed to:', newMode);
+			if (newMode === 'Projects' && !project.value && projects.value.length > 0) {
+				console.log('Auto-selecting first project:', projects.value[0]);
+				project.value = projects.value[0];
+			}
 		});
 
 		const tasks: ComputedRef<Task[]> = computed(() => {

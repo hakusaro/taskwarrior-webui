@@ -99,7 +99,7 @@
 						<v-list-item
 							v-for="m in allModes"
 							:key="m"
-							@click="setDisplayMode(m)"
+							@click="setDisplayModeAndNavigate(m)"
 						>
 							<v-list-item-title>
 								{{ m }}
@@ -181,7 +181,7 @@
 					<v-list-item
 						v-for="m in allModes"
 						:key="'mode-' + m"
-						@click="setDisplayMode(m)"
+						@click="setDisplayModeAndNavigate(m)"
 					>
 						<v-list-item-icon>
 							<v-icon :color="m === displayMode ? 'primary' : undefined">
@@ -259,9 +259,54 @@ export default defineComponent({
 		
 		// Set display mode and provide to children
 		const setDisplayMode = (mode: string) => {
+			console.log('Setting display mode to:', mode);
 			displayMode.value = mode;
+			
 			// Make displayMode available to child components
-			context.app.$root.$emit('display-mode-changed', mode);
+			if (context.app && context.app.$root) {
+				console.log('Emitting display-mode-changed event via $root');
+				context.app.$root.$emit('display-mode-changed', mode);
+			} else {
+				console.log('$root not available, using alternate method');
+				// Provide a direct way to update the mode
+				// Create a global window event instead
+				if (typeof window !== 'undefined') {
+					window.dispatchEvent(new CustomEvent('display-mode-changed', { detail: mode }));
+				}
+			}
+		};
+		
+		// More direct approach that also handles cross-component communication
+		const setDisplayModeAndNavigate = (mode: string) => {
+			console.log('Setting display mode with improved cross-component communication:', mode);
+			// First set the mode locally
+			displayMode.value = mode;
+			
+			// Try different methods to propagate the mode change
+			if (context.app && context.app.$root) {
+				console.log('Using $root event emission');
+				context.app.$root.$emit('display-mode-changed', mode);
+			}
+			
+			// Also try window event
+			if (typeof window !== 'undefined') {
+				console.log('Using window event dispatch');
+				window.dispatchEvent(new CustomEvent('display-mode-changed', { detail: mode }));
+				
+				// Set a global variable too as a fallback
+				(window as any).__forceDisplayMode = mode;
+				(window as any).__currentDisplayMode = mode;
+				
+				// Trigger a custom event that repeats a few times to ensure it's caught
+				const sendEvent = () => {
+					window.dispatchEvent(new CustomEvent('display-mode-changed', { detail: mode }));
+				};
+				
+				// Send multiple times to increase chance of being caught
+				sendEvent();
+				setTimeout(sendEvent, 50);
+				setTimeout(sendEvent, 150);
+			}
 		};
 
 		// System theme media query
@@ -432,6 +477,7 @@ export default defineComponent({
 			displayMode,
 			allModes,
 			setDisplayMode,
+			setDisplayModeAndNavigate,
 			// Task status (no longer displayed)
 			currentStatus,
 			selectedStatusIndex,
