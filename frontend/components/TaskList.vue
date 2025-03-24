@@ -94,19 +94,17 @@
 					</v-list>
 				</v-menu>
 				
-				<!-- Project Progress Indicator with fixed display -->
-				<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3">
+				<!-- Project Progress Indicator - completely separated elements -->
+				<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3 d-flex align-center">
 					<span style="min-width: 40px; display: inline-block; margin-right: 12px;">{{ project }}</span>
-					<div class="progress-container">
-						<v-progress-circular
-							:size="24"
-							:width="3"
-							:value="projectProgress"
-							color="white"
-							class="progress-ring"
-						></v-progress-circular>
-						<span class="progress-text">{{ projectProgress }}%</span>
-					</div>
+					<v-progress-circular
+						:size="20"
+						:width="3"
+						:value="projectProgress"
+						color="white"
+						class="mr-1"
+					></v-progress-circular>
+					<span class="white--text text-caption">{{ projectProgress }}%</span>
 				</v-chip>
 				
 				<!-- No Projects Available Message -->
@@ -159,19 +157,17 @@
 						</v-list>
 					</v-menu>
 					
-					<!-- Project Progress Indicator with fixed display -->
-					<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3">
+					<!-- Project Progress Indicator - completely separated elements -->
+					<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3 d-flex align-center">
 						<span style="min-width: 40px; display: inline-block; margin-right: 12px;">{{ project }}</span>
-						<div class="progress-container">
-							<v-progress-circular
-								:size="24"
-								:width="3"
-								:value="projectProgress"
-								color="white"
-								class="progress-ring"
-							></v-progress-circular>
-							<span class="progress-text">{{ projectProgress }}%</span>
-						</div>
+						<v-progress-circular
+							:size="20"
+							:width="3"
+							:value="projectProgress"
+							color="white"
+							class="mr-1"
+						></v-progress-circular>
+						<span class="white--text text-caption">{{ projectProgress }}%</span>
 					</v-chip>
 				</template>
 				
@@ -749,26 +745,5 @@ export default defineComponent({
   background-color: rgba(0, 0, 0, 0.02);
 }
 
-/* Progress indicator styling */
-.progress-container {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-}
-
-.progress-ring {
-  position: absolute;
-}
-
-.progress-text {
-  position: absolute;
-  font-size: 9px;
-  line-height: 1;
-  font-weight: bold;
-  color: white;
-  text-align: center;
-}
+/* No longer needed - using standard Vuetify classes instead */
 </style>
