@@ -200,23 +200,23 @@
 					color="primary"
 					class="mr-2 mb-2"
 					small
-					@click="newTask"
-					title="New Task"
-				>
-					<v-icon left small>mdi-plus</v-icon>
-					New Task
-				</v-btn>
-				
-				<v-btn
-					color="primary"
-					class="mb-2"
-					small
 					outlined
 					@click="showColumnDialog = true"
 					title="Configure Columns"
 				>
 					<v-icon left small>mdi-cogs</v-icon>
 					Columns
+				</v-btn>
+				
+				<v-btn
+					color="primary"
+					class="mb-2"
+					small
+					@click="newTask"
+					title="New Task"
+				>
+					<v-icon left small>mdi-plus</v-icon>
+					New Task
 				</v-btn>
 			</div>
 		</div>
