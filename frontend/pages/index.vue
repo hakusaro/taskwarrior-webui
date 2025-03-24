@@ -1,72 +1,15 @@
 <template>
 	<div class="px-md-6 px-lg-12 pt-3">
-		<!-- Project Selection & Progress (when in Projects mode) -->
-		<div v-if="mode === 'Projects'" class="mb-4">
-			<!-- Show project selection button -->
-			<v-menu offset-y class="d-inline-block">
-				<template v-slot:activator="{ on, attrs }">
-					<v-btn
-						outlined
-						small
-						v-bind="attrs"
-						v-on="on"
-						:disabled="projects.length === 0"
-					>
-						<v-icon left small>mdi-folder</v-icon>
-						{{ project ? 'Change Project' : 'Select Project' }}
-					</v-btn>
-				</template>
-				<v-list dense>
-					<v-list-item v-if="projects.length === 0">
-						<v-list-item-title class="text-caption">
-							No projects available
-						</v-list-item-title>
-					</v-list-item>
-					<v-list-item
-						v-for="proj in projects"
-						:key="proj"
-						@click="project = proj"
-					>
-						<v-list-item-title>
-							{{ proj }}
-							<v-icon v-if="proj === project" small color="primary" class="ml-2">
-								mdi-check
-							</v-icon>
-						</v-list-item-title>
-					</v-list-item>
-				</v-list>
-			</v-menu>
-
-			<!-- Show project progress chip only if a project is selected -->
-			<v-chip v-if="project" color="primary" class="px-2 ml-2">
-				{{ project }}
-				<v-progress-circular
-					:size="20"
-					:width="3"
-					:value="progress"
-					color="white"
-					class="ml-1"
-				>
-					{{ progress }}%
-				</v-progress-circular>
-			</v-chip>
-			
-			<!-- Message when no projects available -->
-			<v-chip v-if="!project && projects.length === 0" outlined class="ml-2" color="info">
-				<v-icon left small>mdi-information</v-icon>
-				No projects available
-			</v-chip>
-		</div>
-
 		<TaskList 
 			:tasks="tasks" 
 			:mode="mode"
 			:project="project"
 			:project-progress="progress"
+			:projects-list="projects"
+			:show-project-selector="mode === 'Projects'"
 			:active-context="activeContextLabel"
 			:available-contexts="availableContexts"
 			:all-modes="allModes"
-			:projects-list="projects"
 			@context-change="selectedContext = $event"
 			@mode-change="mode = $event"
 			@project-change="project = $event"

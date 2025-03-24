@@ -58,6 +58,64 @@
 
 			<!-- Global Actions - Always visible -->
 			<div class="d-flex flex-wrap align-center ml-auto">
+				<!-- Project Selector (only in Projects mode) -->
+				<template v-if="showProjectSelector">
+					<!-- Project Selection Dropdown -->
+					<v-menu offset-y class="mr-2 mb-2">
+						<template v-slot:activator="{ on, attrs }">
+							<v-btn
+								outlined
+								small
+								color="primary"
+								v-bind="attrs"
+								v-on="on"
+								:disabled="projectsList.length === 0"
+							>
+								<v-icon left small>mdi-folder</v-icon>
+								{{ project ? 'Change Project' : 'Select Project' }}
+							</v-btn>
+						</template>
+						<v-list dense>
+							<v-list-item v-if="projectsList.length === 0">
+								<v-list-item-title class="text-caption">
+									No projects available
+								</v-list-item-title>
+							</v-list-item>
+							<v-list-item
+								v-for="proj in projectsList"
+								:key="proj"
+								@click="$emit('project-change', proj)"
+							>
+								<v-list-item-title>
+									{{ proj }}
+									<v-icon v-if="proj === project" small color="primary" class="ml-2">
+										mdi-check
+									</v-icon>
+								</v-list-item-title>
+							</v-list-item>
+						</v-list>
+					</v-menu>
+					
+					<!-- Project Progress Indicator -->
+					<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3">
+						<span class="mr-2">{{ project }}</span>
+						<v-progress-circular
+							:size="20"
+							:width="3"
+							:value="projectProgress"
+							color="white"
+						>
+							{{ projectProgress }}%
+						</v-progress-circular>
+					</v-chip>
+					
+					<!-- No Projects Available Message -->
+					<v-chip v-if="!project && projectsList.length === 0" outlined class="mr-2 mb-2" color="info">
+						<v-icon left small>mdi-information</v-icon>
+						No projects available
+					</v-chip>
+				</template>
+			
 				<v-btn
 					color="primary"
 					class="mr-2 mb-2"
@@ -343,6 +401,10 @@ export default defineComponent({
 		projectsList: {
 			type: Array,
 			default: () => []
+		},
+		showProjectSelector: {
+			type: Boolean,
+			default: false
 		}
 	},
 
