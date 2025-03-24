@@ -10,7 +10,7 @@
 		<ColumnDialog v-model="showColumnDialog" :active-columns="headers"/>
 
 		<!-- Common Action Bar -->
-		<div class="task-actions px-3 mb-4 d-flex flex-wrap align-center">
+		<div class="task-actions px-3 mb-4 d-flex flex-wrap">
 			<!-- Batch actions - Only visible when items are selected -->
 			<template v-if="selected.length">
 				<div class="d-flex flex-wrap align-center">
@@ -56,10 +56,73 @@
 				<v-spacer />
 			</template>
 
+			<!-- Project controls - Left aligned when in Projects mode -->
+			<div v-if="showProjectSelector && !selected.length" class="d-flex flex-wrap align-center mr-auto">
+				<!-- Project Selection Dropdown -->
+				<v-menu offset-y class="mr-2 mb-2">
+					<template v-slot:activator="{ on, attrs }">
+						<v-btn
+							outlined
+							small
+							color="primary"
+							v-bind="attrs"
+							v-on="on"
+							:disabled="projectsList.length === 0"
+						>
+							<v-icon left small>mdi-folder</v-icon>
+							{{ project ? 'Change Project' : 'Select Project' }}
+						</v-btn>
+					</template>
+					<v-list dense>
+						<v-list-item v-if="projectsList.length === 0">
+							<v-list-item-title class="text-caption">
+								No projects available
+							</v-list-item-title>
+						</v-list-item>
+						<v-list-item
+							v-for="proj in projectsList"
+							:key="proj"
+							@click="$emit('project-change', proj)"
+						>
+							<v-list-item-title>
+								{{ proj }}
+								<v-icon v-if="proj === project" small color="primary" class="ml-2">
+									mdi-check
+								</v-icon>
+							</v-list-item-title>
+						</v-list-item>
+					</v-list>
+				</v-menu>
+				
+				<!-- Project Progress Indicator with fixed display -->
+				<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3">
+					<span style="min-width: 40px; display: inline-block; margin-right: 12px;">{{ project }}</span>
+					<div class="progress-container">
+						<v-progress-circular
+							:size="24"
+							:width="3"
+							:value="projectProgress"
+							color="white"
+							class="progress-ring"
+						></v-progress-circular>
+						<span class="progress-text">{{ projectProgress }}%</span>
+					</div>
+				</v-chip>
+				
+				<!-- No Projects Available Message -->
+				<v-chip v-if="!project && projectsList.length === 0" outlined class="mr-2 mb-2" color="info">
+					<v-icon left small>mdi-information</v-icon>
+					No projects available
+				</v-chip>
+			</div>
+			
+			<!-- Spacer to push global actions to the right when project controls are shown -->
+			<v-spacer v-if="showProjectSelector && !selected.length" />
+
 			<!-- Global Actions - Always visible -->
-			<div class="d-flex flex-wrap align-center ml-auto">
-				<!-- Project Selector (only in Projects mode) -->
-				<template v-if="showProjectSelector">
+			<div class="d-flex flex-wrap align-center" :class="{'ml-auto': !showProjectSelector || selected.length}">
+				<!-- Project Selector embedded in global actions (only shows when not already in the left section) -->
+				<template v-if="showProjectSelector && selected.length">
 					<!-- Project Selection Dropdown -->
 					<v-menu offset-y class="mr-2 mb-2">
 						<template v-slot:activator="{ on, attrs }">
@@ -96,26 +159,22 @@
 						</v-list>
 					</v-menu>
 					
-					<!-- Project Progress Indicator -->
+					<!-- Project Progress Indicator with fixed display -->
 					<v-chip v-if="project" color="primary" class="mr-2 mb-2 px-3">
-						<span class="mr-2">{{ project }}</span>
-						<v-progress-circular
-							:size="20"
-							:width="3"
-							:value="projectProgress"
-							color="white"
-						>
-							{{ projectProgress }}%
-						</v-progress-circular>
-					</v-chip>
-					
-					<!-- No Projects Available Message -->
-					<v-chip v-if="!project && projectsList.length === 0" outlined class="mr-2 mb-2" color="info">
-						<v-icon left small>mdi-information</v-icon>
-						No projects available
+						<span style="min-width: 40px; display: inline-block; margin-right: 12px;">{{ project }}</span>
+						<div class="progress-container">
+							<v-progress-circular
+								:size="24"
+								:width="3"
+								:value="projectProgress"
+								color="white"
+								class="progress-ring"
+							></v-progress-circular>
+							<span class="progress-text">{{ projectProgress }}%</span>
+						</div>
 					</v-chip>
 				</template>
-			
+				
 				<v-btn
 					color="primary"
 					class="mr-2 mb-2"
@@ -414,12 +473,12 @@ export default defineComponent({
 		// We don't need selectedStatusIndex anymore as it's handled by the parent
 
 		// Inject task status from parent layout
-const taskStatusProvider = inject('taskStatus') as { 
-	currentStatus: Ref<string>,
-	changeStatus: (status: string) => void 
-};
-
-const status = computed(() => taskStatusProvider.currentStatus.value);
+	const taskStatusProvider = inject('taskStatus') as { 
+		currentStatus: Ref<string>,
+		changeStatus: (status: string) => void 
+	};
+	
+	const status = computed(() => taskStatusProvider.currentStatus.value);
 		const allStatus = ['pending', 'waiting', 'completed', 'deleted', 'recurring'];
 		const statusIcons: { [st: string]: string } = {
 			pending: 'mdi-clock-outline',
@@ -688,5 +747,28 @@ const status = computed(() => taskStatusProvider.currentStatus.value);
 .task-actions {
   border-radius: 4px;
   background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Progress indicator styling */
+.progress-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.progress-ring {
+  position: absolute;
+}
+
+.progress-text {
+  position: absolute;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: bold;
+  color: white;
+  text-align: center;
 }
 </style>
